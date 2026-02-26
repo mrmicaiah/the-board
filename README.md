@@ -46,4 +46,4 @@ Control the board via Claude chat with these commands:
 - And more for notepads...
 
 ---
-Built with Cloudflare Workers + D1
+Built with Cloudflare Workers + D1 🚀
