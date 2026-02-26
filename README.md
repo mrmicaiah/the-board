@@ -33,4 +33,17 @@ A visual whiteboard dashboard for your second monitor/TV. Hand-drawn marker aest
 - `POST /api/tasks/clean` - Add clean task
 - `POST /api/tasks/messy` - Add to dump
 - `DELETE /api/item/:id` - Delete any item by badge number
+
+## MCP Tools
+
+Control the board via Claude chat with these commands:
+- `board_status` - View everything
+- `board_add_project` - Add project
+- `board_activate` / `board_deactivate` - Toggle lights
+- `board_add_task` - Add to dump
+- `board_add_clean_task` - Add to tasks
+- `board_search` - Find items by keyword
 - And more for notepads...
+
+---
+Built with Cloudflare Workers + D1
