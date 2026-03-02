@@ -74,20 +74,20 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
 
     // Project card
     const ProjectCard = ({ project, scale }) => {
-      const titleSize = scale > 0.7 ? 32 : scale > 0.5 ? 26 : 20;
-      const statusSize = scale > 0.7 ? 20 : scale > 0.5 ? 17 : 14;
-      const padding = scale > 0.7 ? 24 : scale > 0.5 ? 16 : 12;
-      const badgeSize = scale > 0.7 ? 'large' : scale > 0.5 ? 'normal' : 'small';
+      const titleSize = scale > 0.7 ? 28 : scale > 0.5 ? 22 : 18;
+      const statusSize = scale > 0.7 ? 18 : scale > 0.5 ? 15 : 13;
+      const padding = scale > 0.7 ? 20 : scale > 0.5 ? 14 : 10;
+      const badgeSize = scale > 0.7 ? 'normal' : scale > 0.5 ? 'small' : 'tiny';
       const lightSize = scale > 0.5 ? 'normal' : 'small';
       
       return (
         <div className="item-enter" style={{
           backgroundColor: 'rgba(255,255,255,0.85)', border: '3px solid #374151',
           borderRadius: 8, padding, display: 'flex', flexDirection: 'column',
-          gap: scale > 0.5 ? 12 : 8, boxShadow: '4px 4px 0 rgba(0,0,0,0.15)',
-          flex: 1, minHeight: 0, overflow: 'hidden'
+          gap: scale > 0.5 ? 10 : 6, boxShadow: '4px 4px 0 rgba(0,0,0,0.15)',
+          flexShrink: 0, overflow: 'hidden'
         }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: scale > 0.5 ? 16 : 10 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: scale > 0.5 ? 12 : 8 }}>
             <NumberBadge number={project.id} size={badgeSize} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <h2 style={{
@@ -95,15 +95,15 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
                 color: '#1a1a1a', marginBottom: 2, letterSpacing: 1,
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
               }}>{project.name}</h2>
-              <div style={{ height: 3, backgroundColor: '#1a1a1a', borderRadius: 2 }} />
+              <div style={{ height: 2, backgroundColor: '#1a1a1a', borderRadius: 2 }} />
             </div>
             <StatusLight active={project.active} size={lightSize} />
           </div>
           <p style={{
             fontFamily: "'Architects Daughter', cursive", fontSize: statusSize,
-            color: '#374151', lineHeight: 1.4, paddingLeft: scale > 0.5 ? 52 : 38,
+            color: '#374151', lineHeight: 1.4, paddingLeft: scale > 0.5 ? 48 : 30,
             overflow: 'hidden', display: '-webkit-box',
-            WebkitLineClamp: scale > 0.7 ? 4 : scale > 0.5 ? 3 : 2, WebkitBoxOrient: 'vertical'
+            WebkitLineClamp: scale > 0.7 ? 3 : 2, WebkitBoxOrient: 'vertical'
           }}>{project.status_notes}</p>
         </div>
       );
@@ -119,7 +119,7 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
         <div className="item-enter" style={{
           display: 'flex', alignItems: 'center', gap: scale > 0.5 ? 12 : 8,
           padding, backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 6,
-          border: '2px solid #9ca3af', flex: 1, minHeight: 0, position: 'relative'
+          border: '2px solid #9ca3af', flexShrink: 0, position: 'relative'
         }}>
           <NumberBadge number={task.id} size={badgeSize} />
           <span style={{
@@ -246,33 +246,33 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
 
       const pinnedNotepads = data.notepads?.filter(n => data.pinnedNotepads?.includes(n.id)) || [];
       const notepadCount = pinnedNotepads.length;
-      const projectScale = Math.max(0.3, 1 - ((data.projects?.length || 1) - 1) * 0.15);
-      const cleanTaskScale = Math.max(0.3, 1 - ((data.cleanTasks?.length || 1) - 1) * 0.1);
-      const messyTaskScale = Math.max(0.3, 1 - ((data.messyTasks?.length || 1) - 1) * 0.06);
+      const projectScale = Math.max(0.4, 1 - ((data.projects?.length || 1) - 1) * 0.12);
+      const cleanTaskScale = Math.max(0.4, 1 - ((data.cleanTasks?.length || 1) - 1) * 0.08);
+      const messyTaskScale = Math.max(0.4, 1 - ((data.messyTasks?.length || 1) - 1) * 0.05);
       const isEmpty = !data.projects?.length && !data.cleanTasks?.length && !data.messyTasks?.length;
 
       return (
         <div style={{
           width: '100vw', height: '100vh', backgroundColor: '#f5f5f0',
           backgroundImage: "radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.05) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 200, 150, 0.08) 0%, transparent 50%)",
-          display: 'flex', position: 'relative', padding: 20, gap: 20
+          display: 'flex', position: 'relative', padding: 32, gap: 24, overflow: 'hidden'
         }}>
           {isEmpty ? <EmptyState /> : (
             <>
-              {/* Projects column */}
-              <div style={{ flex: '0 0 50%', display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
-                <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 28, color: '#6b7280', paddingLeft: 8, opacity: 0.7, flexShrink: 0 }}>PROJECTS</div>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
+              {/* Projects column - narrower */}
+              <div style={{ width: '30%', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
+                <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 24, color: '#6b7280', paddingLeft: 8, opacity: 0.7, flexShrink: 0 }}>PROJECTS</div>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0, overflow: 'auto' }}>
                   {data.projects?.map(project => <ProjectCard key={project.id} project={project} scale={projectScale} />)}
                 </div>
               </div>
 
-              {/* Tasks column */}
-              <div style={{ flex: '0 0 50%', display: 'flex', gap: 16, minHeight: 0 }}>
+              {/* Tasks column - wider */}
+              <div style={{ flex: 1, display: 'flex', gap: 20, minHeight: 0 }}>
                 {/* Clean tasks */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
                   <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 24, color: '#6b7280', paddingLeft: 8, opacity: 0.7, flexShrink: 0 }}>TASKS</div>
-                  <div style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 8, border: '2px dashed #d1d5db', padding: 12, display: 'flex', flexDirection: 'column', gap: 8, minHeight: 0 }}>
+                  <div style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 8, border: '2px dashed #d1d5db', padding: 12, display: 'flex', flexDirection: 'column', gap: 8, minHeight: 0, overflow: 'auto' }}>
                     {data.cleanTasks?.map(task => <CleanTask key={task.id} task={task} scale={cleanTaskScale} onDelete={(id, text) => setConfirmDelete({ id, text })} />)}
                   </div>
                 </div>
@@ -280,7 +280,7 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
                 {/* Messy dump */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
                   <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 24, color: '#6b7280', paddingLeft: 8, opacity: 0.7, flexShrink: 0 }}>DUMP</div>
-                  <div style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: 8, border: '2px dashed #9ca3af', padding: 12, display: 'flex', flexWrap: 'wrap', gap: 10, alignContent: 'flex-start', minHeight: 0, overflow: 'hidden' }}>
+                  <div style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: 8, border: '2px dashed #9ca3af', padding: 12, display: 'flex', flexWrap: 'wrap', gap: 10, alignContent: 'flex-start', minHeight: 0, overflow: 'auto' }}>
                     {data.messyTasks?.map((task, i) => <MessyTask key={task.id} task={task} index={i} scale={messyTaskScale} onDelete={deleteItem} onExpand={setExpandedTask} />)}
                   </div>
                 </div>
