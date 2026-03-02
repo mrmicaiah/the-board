@@ -51,7 +51,7 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
 
     // Status light
     const StatusLight = ({ active, size = 'normal' }) => {
-      const s = size === 'small' ? 32 : 48;
+      const s = size === 'small' ? 28 : 40;
       const b = size === 'small' ? 3 : 4;
       return (
         <div className={active ? 'light-active' : ''} style={{
@@ -59,13 +59,13 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
           backgroundColor: active ? '#22c55e' : '#ef4444',
           border: \`\${b}px solid #374151\`,
           boxShadow: active 
-            ? '0 0 20px #22c55e, inset 0 -8px 16px rgba(0,0,0,0.3), inset 0 4px 8px rgba(255,255,255,0.3)' 
-            : '0 0 12px #ef4444, inset 0 -8px 16px rgba(0,0,0,0.3), inset 0 4px 8px rgba(255,255,255,0.2)',
+            ? '0 0 15px #22c55e, inset 0 -6px 12px rgba(0,0,0,0.3), inset 0 3px 6px rgba(255,255,255,0.3)' 
+            : '0 0 10px #ef4444, inset 0 -6px 12px rgba(0,0,0,0.3), inset 0 3px 6px rgba(255,255,255,0.2)',
           position: 'relative', flexShrink: 0
         }}>
           <div style={{
-            position: 'absolute', top: size === 'small' ? 4 : 6, left: size === 'small' ? 7 : 10,
-            width: size === 'small' ? 8 : 12, height: size === 'small' ? 5 : 8,
+            position: 'absolute', top: size === 'small' ? 3 : 5, left: size === 'small' ? 5 : 8,
+            width: size === 'small' ? 6 : 10, height: size === 'small' ? 4 : 6,
             borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.4)'
           }} />
         </div>
@@ -74,52 +74,53 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
 
     // Project card
     const ProjectCard = ({ project, scale }) => {
-      const titleSize = scale > 0.7 ? 28 : scale > 0.5 ? 22 : 18;
-      const statusSize = scale > 0.7 ? 18 : scale > 0.5 ? 15 : 13;
-      const padding = scale > 0.7 ? 20 : scale > 0.5 ? 14 : 10;
-      const badgeSize = scale > 0.7 ? 'normal' : scale > 0.5 ? 'small' : 'tiny';
-      const lightSize = scale > 0.5 ? 'normal' : 'small';
+      const titleSize = scale > 0.7 ? 24 : scale > 0.5 ? 20 : 16;
+      const statusSize = scale > 0.7 ? 16 : scale > 0.5 ? 14 : 12;
+      const padding = scale > 0.7 ? 16 : scale > 0.5 ? 12 : 8;
+      const badgeSize = scale > 0.7 ? 'small' : 'tiny';
+      const lightSize = 'small';
       
       return (
         <div className="item-enter" style={{
-          backgroundColor: 'rgba(255,255,255,0.85)', border: '3px solid #374151',
-          borderRadius: 8, padding, display: 'flex', flexDirection: 'column',
-          gap: scale > 0.5 ? 10 : 6, boxShadow: '4px 4px 0 rgba(0,0,0,0.15)',
+          backgroundColor: 'rgba(255,255,255,0.85)', border: '2px solid #374151',
+          borderRadius: 6, padding, display: 'flex', flexDirection: 'column',
+          gap: scale > 0.5 ? 8 : 4, boxShadow: '3px 3px 0 rgba(0,0,0,0.12)',
           flexShrink: 0, overflow: 'hidden'
         }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: scale > 0.5 ? 12 : 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <NumberBadge number={project.id} size={badgeSize} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <h2 style={{
                 fontFamily: "'Permanent Marker', cursive", fontSize: titleSize,
-                color: '#1a1a1a', marginBottom: 2, letterSpacing: 1,
+                color: '#1a1a1a', letterSpacing: 0.5,
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
               }}>{project.name}</h2>
-              <div style={{ height: 2, backgroundColor: '#1a1a1a', borderRadius: 2 }} />
             </div>
             <StatusLight active={project.active} size={lightSize} />
           </div>
-          <p style={{
-            fontFamily: "'Architects Daughter', cursive", fontSize: statusSize,
-            color: '#374151', lineHeight: 1.4, paddingLeft: scale > 0.5 ? 48 : 30,
-            overflow: 'hidden', display: '-webkit-box',
-            WebkitLineClamp: scale > 0.7 ? 3 : 2, WebkitBoxOrient: 'vertical'
-          }}>{project.status_notes}</p>
+          {project.status_notes && (
+            <p style={{
+              fontFamily: "'Architects Daughter', cursive", fontSize: statusSize,
+              color: '#374151', lineHeight: 1.3, paddingLeft: 38,
+              overflow: 'hidden', display: '-webkit-box',
+              WebkitLineClamp: 2, WebkitBoxOrient: 'vertical'
+            }}>{project.status_notes}</p>
+          )}
         </div>
       );
     };
 
     // Clean task
     const CleanTask = ({ task, scale, onDelete }) => {
-      const fontSize = scale > 0.7 ? 18 : scale > 0.5 ? 15 : 13;
-      const padding = scale > 0.7 ? '12px 16px' : scale > 0.5 ? '8px 12px' : '6px 10px';
-      const badgeSize = scale > 0.7 ? 'small' : 'tiny';
+      const fontSize = scale > 0.7 ? 16 : scale > 0.5 ? 14 : 12;
+      const padding = scale > 0.7 ? '10px 14px' : scale > 0.5 ? '8px 10px' : '6px 8px';
+      const badgeSize = 'tiny';
       
       return (
         <div className="item-enter" style={{
-          display: 'flex', alignItems: 'center', gap: scale > 0.5 ? 12 : 8,
-          padding, backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 6,
-          border: '2px solid #9ca3af', flexShrink: 0, position: 'relative'
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding, backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 5,
+          border: '2px solid #9ca3af', flexShrink: 0
         }}>
           <NumberBadge number={task.id} size={badgeSize} />
           <span style={{
@@ -127,11 +128,11 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
             color: '#1a1a1a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1
           }}>{task.text}</span>
           <button onClick={() => onDelete(task.id, task.text)} style={{
-            width: 20, height: 20, borderRadius: '50%',
-            background: 'rgba(0,0,0,0.5)', color: 'white',
-            border: 'none', fontSize: 12, cursor: 'pointer',
+            width: 18, height: 18, borderRadius: '50%',
+            background: 'rgba(0,0,0,0.4)', color: 'white',
+            border: 'none', fontSize: 10, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            opacity: 0.6, flexShrink: 0
+            opacity: 0.5, flexShrink: 0
           }}>✕</button>
         </div>
       );
@@ -139,35 +140,34 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
 
     // Messy task (sticky note)
     const MessyTask = ({ task, index, scale, onDelete, onExpand }) => {
-      const rotation = useMemo(() => (Math.random() - 0.5) * 12, []);
+      const rotation = useMemo(() => (Math.random() - 0.5) * 10, []);
       const colors = ['#fef08a', '#fde68a', '#fcd34d', '#fbbf24'];
       const bgColor = useMemo(() => colors[index % colors.length], [index]);
-      const fontSize = scale > 0.6 ? 16 : scale > 0.4 ? 13 : 11;
-      const padding = scale > 0.6 ? '10px 12px' : scale > 0.4 ? '7px 9px' : '5px 7px';
-      const badgeSize = scale > 0.6 ? 'small' : 'tiny';
+      const fontSize = scale > 0.6 ? 14 : scale > 0.4 ? 12 : 10;
+      const padding = scale > 0.6 ? '8px 10px' : '6px 8px';
+      const badgeSize = 'tiny';
       
       return (
         <div className="item-enter" onClick={() => onExpand(task)} style={{
           backgroundColor: bgColor, padding, borderRadius: 2,
-          boxShadow: '3px 3px 8px rgba(0,0,0,0.25)', transform: \`rotate(\${rotation}deg)\`,
-          display: 'flex', flexDirection: 'column', gap: scale > 0.5 ? 6 : 4,
-          flex: '1 1 auto', minWidth: scale > 0.6 ? 90 : scale > 0.4 ? 70 : 55,
-          maxWidth: scale > 0.6 ? 150 : scale > 0.4 ? 120 : 95,
-          position: 'relative', cursor: 'pointer'
+          boxShadow: '2px 2px 6px rgba(0,0,0,0.2)', transform: \`rotate(\${rotation}deg)\`,
+          display: 'flex', flexDirection: 'column', gap: 4,
+          width: scale > 0.6 ? 120 : scale > 0.4 ? 100 : 80,
+          position: 'relative', cursor: 'pointer', flexShrink: 0
         }}>
           <button onClick={(e) => { e.stopPropagation(); onDelete(task.id); }} style={{
-            position: 'absolute', top: -6, right: -6,
-            width: 20, height: 20, borderRadius: '50%',
-            background: 'rgba(0,0,0,0.6)', color: 'white',
-            border: 'none', fontSize: 12, cursor: 'pointer',
+            position: 'absolute', top: -5, right: -5,
+            width: 16, height: 16, borderRadius: '50%',
+            background: 'rgba(0,0,0,0.5)', color: 'white',
+            border: 'none', fontSize: 9, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            opacity: 0.7
+            opacity: 0.6
           }}>✕</button>
           <NumberBadge number={task.id} size={badgeSize} />
           <span style={{
             fontFamily: "'Caveat', cursive", fontSize, color: '#1a1a1a',
             fontWeight: 500, lineHeight: 1.2, overflow: 'hidden', display: '-webkit-box',
-            WebkitLineClamp: scale > 0.5 ? 3 : 2, WebkitBoxOrient: 'vertical'
+            WebkitLineClamp: 3, WebkitBoxOrient: 'vertical'
           }}>{task.text}</span>
         </div>
       );
@@ -246,43 +246,41 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
 
       const pinnedNotepads = data.notepads?.filter(n => data.pinnedNotepads?.includes(n.id)) || [];
       const notepadCount = pinnedNotepads.length;
-      const projectScale = Math.max(0.4, 1 - ((data.projects?.length || 1) - 1) * 0.12);
-      const cleanTaskScale = Math.max(0.4, 1 - ((data.cleanTasks?.length || 1) - 1) * 0.08);
-      const messyTaskScale = Math.max(0.4, 1 - ((data.messyTasks?.length || 1) - 1) * 0.05);
+      const projectScale = Math.max(0.5, 1 - ((data.projects?.length || 1) - 1) * 0.1);
+      const cleanTaskScale = Math.max(0.5, 1 - ((data.cleanTasks?.length || 1) - 1) * 0.06);
+      const messyTaskScale = Math.max(0.5, 1 - ((data.messyTasks?.length || 1) - 1) * 0.04);
       const isEmpty = !data.projects?.length && !data.cleanTasks?.length && !data.messyTasks?.length;
 
       return (
         <div style={{
-          width: '100vw', height: '100vh', backgroundColor: '#f5f5f0',
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: '#f5f5f0',
           backgroundImage: "radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.05) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 200, 150, 0.08) 0%, transparent 50%)",
-          display: 'flex', position: 'relative', padding: 32, gap: 24, overflow: 'hidden'
+          display: 'flex', padding: 24, gap: 20, overflow: 'hidden'
         }}>
           {isEmpty ? <EmptyState /> : (
             <>
-              {/* Projects column - narrower */}
-              <div style={{ width: '30%', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
-                <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 24, color: '#6b7280', paddingLeft: 8, opacity: 0.7, flexShrink: 0 }}>PROJECTS</div>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0, overflow: 'auto' }}>
+              {/* Projects column */}
+              <div style={{ width: 320, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
+                <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 22, color: '#6b7280', paddingLeft: 4, opacity: 0.7, flexShrink: 0 }}>PROJECTS</div>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflow: 'auto', paddingRight: 4 }}>
                   {data.projects?.map(project => <ProjectCard key={project.id} project={project} scale={projectScale} />)}
                 </div>
               </div>
 
-              {/* Tasks column - wider */}
-              <div style={{ flex: 1, display: 'flex', gap: 20, minHeight: 0 }}>
-                {/* Clean tasks */}
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
-                  <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 24, color: '#6b7280', paddingLeft: 8, opacity: 0.7, flexShrink: 0 }}>TASKS</div>
-                  <div style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 8, border: '2px dashed #d1d5db', padding: 12, display: 'flex', flexDirection: 'column', gap: 8, minHeight: 0, overflow: 'auto' }}>
-                    {data.cleanTasks?.map(task => <CleanTask key={task.id} task={task} scale={cleanTaskScale} onDelete={(id, text) => setConfirmDelete({ id, text })} />)}
-                  </div>
+              {/* Tasks column */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
+                <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 22, color: '#6b7280', paddingLeft: 4, opacity: 0.7, flexShrink: 0 }}>TASKS</div>
+                <div style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.4)', borderRadius: 8, border: '2px dashed #d1d5db', padding: 10, display: 'flex', flexDirection: 'column', gap: 6, overflow: 'auto' }}>
+                  {data.cleanTasks?.map(task => <CleanTask key={task.id} task={task} scale={cleanTaskScale} onDelete={(id, text) => setConfirmDelete({ id, text })} />)}
                 </div>
+              </div>
 
-                {/* Messy dump */}
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
-                  <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 24, color: '#6b7280', paddingLeft: 8, opacity: 0.7, flexShrink: 0 }}>DUMP</div>
-                  <div style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: 8, border: '2px dashed #9ca3af', padding: 12, display: 'flex', flexWrap: 'wrap', gap: 10, alignContent: 'flex-start', minHeight: 0, overflow: 'auto' }}>
-                    {data.messyTasks?.map((task, i) => <MessyTask key={task.id} task={task} index={i} scale={messyTaskScale} onDelete={deleteItem} onExpand={setExpandedTask} />)}
-                  </div>
+              {/* Dump column */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
+                <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 22, color: '#6b7280', paddingLeft: 4, opacity: 0.7, flexShrink: 0 }}>DUMP</div>
+                <div style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: 8, border: '2px dashed #9ca3af', padding: 10, display: 'flex', flexWrap: 'wrap', gap: 8, alignContent: 'flex-start', overflow: 'auto' }}>
+                  {data.messyTasks?.map((task, i) => <MessyTask key={task.id} task={task} index={i} scale={messyTaskScale} onDelete={deleteItem} onExpand={setExpandedTask} />)}
                 </div>
               </div>
             </>
