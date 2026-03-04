@@ -6,15 +6,236 @@ async function getNextId(db) {
   return result.id;
 }
 
+// Alice's tools definition
+const ALICE_TOOLS = [
+  {
+    name: "add_task",
+    description: "Add a task to the clean task list",
+    input_schema: {
+      type: "object",
+      properties: {
+        text: { type: "string", description: "The task text" }
+      },
+      required: ["text"]
+    }
+  },
+  {
+    name: "add_dump",
+    description: "Add an item to the messy dump (brain dump area)",
+    input_schema: {
+      type: "object",
+      properties: {
+        text: { type: "string", description: "The dump item text" }
+      },
+      required: ["text"]
+    }
+  },
+  {
+    name: "add_project",
+    description: "Add a new project to the board",
+    input_schema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "Project name" },
+        status_notes: { type: "string", description: "Optional status notes" },
+        active: { type: "boolean", description: "Whether the project is active (green light)" }
+      },
+      required: ["name"]
+    }
+  },
+  {
+    name: "update_project",
+    description: "Update a project's status notes or active state",
+    input_schema: {
+      type: "object",
+      properties: {
+        id: { type: "number", description: "Project badge number" },
+        status_notes: { type: "string", description: "New status notes" },
+        active: { type: "boolean", description: "Set active (green) or inactive (red)" }
+      },
+      required: ["id"]
+    }
+  },
+  {
+    name: "delete_item",
+    description: "Delete any item from the board by its badge number",
+    input_schema: {
+      type: "object",
+      properties: {
+        id: { type: "number", description: "Badge number of item to delete" }
+      },
+      required: ["id"]
+    }
+  },
+  {
+    name: "create_notepad",
+    description: "Create a new notepad",
+    input_schema: {
+      type: "object",
+      properties: {
+        title: { type: "string", description: "Notepad title" }
+      },
+      required: ["title"]
+    }
+  },
+  {
+    name: "add_notepad_item",
+    description: "Add an item to a notepad",
+    input_schema: {
+      type: "object",
+      properties: {
+        notepad_id: { type: "number", description: "Notepad badge number" },
+        text: { type: "string", description: "Item text" }
+      },
+      required: ["notepad_id", "text"]
+    }
+  },
+  {
+    name: "check_notepad_item",
+    description: "Mark a notepad item as done or undone",
+    input_schema: {
+      type: "object",
+      properties: {
+        notepad_id: { type: "number", description: "Notepad badge number" },
+        item_id: { type: "number", description: "Item badge number" },
+        done: { type: "boolean", description: "Mark as done (true) or undone (false)" }
+      },
+      required: ["notepad_id", "item_id", "done"]
+    }
+  },
+  {
+    name: "pin_notepad",
+    description: "Pin a notepad to display on the board (max 3)",
+    input_schema: {
+      type: "object",
+      properties: {
+        notepad_id: { type: "number", description: "Notepad badge number to pin" }
+      },
+      required: ["notepad_id"]
+    }
+  },
+  {
+    name: "unpin_notepad",
+    description: "Unpin a notepad from the board display",
+    input_schema: {
+      type: "object",
+      properties: {
+        notepad_id: { type: "number", description: "Notepad badge number to unpin" }
+      },
+      required: ["notepad_id"]
+    }
+  },
+  {
+    name: "move_dump_to_tasks",
+    description: "Move an item from the dump to the clean task list",
+    input_schema: {
+      type: "object",
+      properties: {
+        id: { type: "number", description: "Badge number of dump item to promote" }
+      },
+      required: ["id"]
+    }
+  }
+];
+
+// Execute Alice's tool calls
+async function executeAliceTool(db, toolName, toolInput) {
+  switch (toolName) {
+    case "add_task": {
+      const id = await getNextId(db);
+      const maxSort = await db.prepare('SELECT COALESCE(MAX(sort_order), 0) + 1 as next FROM clean_tasks').first();
+      await db.prepare('INSERT INTO clean_tasks (id, text, sort_order) VALUES (?, ?, ?)').bind(id, toolInput.text, maxSort.next).run();
+      return { success: true, id, message: `Added task [${id}]: ${toolInput.text}` };
+    }
+    case "add_dump": {
+      const id = await getNextId(db);
+      await db.prepare('INSERT INTO messy_tasks (id, text) VALUES (?, ?)').bind(id, toolInput.text).run();
+      return { success: true, id, message: `Added to dump [${id}]: ${toolInput.text}` };
+    }
+    case "add_project": {
+      const id = await getNextId(db);
+      const maxSort = await db.prepare('SELECT COALESCE(MAX(sort_order), 0) + 1 as next FROM projects').first();
+      await db.prepare('INSERT INTO projects (id, name, status_notes, active, sort_order) VALUES (?, ?, ?, ?, ?)')
+        .bind(id, toolInput.name, toolInput.status_notes || '', toolInput.active ? 1 : 0, maxSort.next).run();
+      return { success: true, id, message: `Added project [${id}]: ${toolInput.name}` };
+    }
+    case "update_project": {
+      const updates = [];
+      const values = [];
+      if (toolInput.status_notes !== undefined) { updates.push('status_notes = ?'); values.push(toolInput.status_notes); }
+      if (toolInput.active !== undefined) { updates.push('active = ?'); values.push(toolInput.active ? 1 : 0); }
+      if (updates.length > 0) {
+        updates.push("updated_at = datetime('now')");
+        values.push(toolInput.id);
+        await db.prepare(`UPDATE projects SET ${updates.join(', ')} WHERE id = ?`).bind(...values).run();
+      }
+      return { success: true, id: toolInput.id, message: `Updated project [${toolInput.id}]` };
+    }
+    case "delete_item": {
+      const tables = ['projects', 'clean_tasks', 'messy_tasks', 'notepads', 'notepad_items'];
+      for (const table of tables) {
+        const result = await db.prepare(`DELETE FROM ${table} WHERE id = ?`).bind(toolInput.id).run();
+        if (result.meta.changes > 0) {
+          return { success: true, id: toolInput.id, message: `Deleted item [${toolInput.id}]` };
+        }
+      }
+      return { success: false, message: `Item [${toolInput.id}] not found` };
+    }
+    case "create_notepad": {
+      const id = await getNextId(db);
+      await db.prepare('INSERT INTO notepads (id, title) VALUES (?, ?)').bind(id, toolInput.title).run();
+      return { success: true, id, message: `Created notepad [${id}]: ${toolInput.title}` };
+    }
+    case "add_notepad_item": {
+      const id = await getNextId(db);
+      const maxSort = await db.prepare('SELECT COALESCE(MAX(sort_order), 0) + 1 as next FROM notepad_items WHERE notepad_id = ?').bind(toolInput.notepad_id).first();
+      await db.prepare('INSERT INTO notepad_items (id, notepad_id, text, sort_order) VALUES (?, ?, ?, ?)').bind(id, toolInput.notepad_id, toolInput.text, maxSort.next).run();
+      return { success: true, id, message: `Added item [${id}] to notepad [${toolInput.notepad_id}]` };
+    }
+    case "check_notepad_item": {
+      await db.prepare('UPDATE notepad_items SET done = ? WHERE id = ? AND notepad_id = ?').bind(toolInput.done ? 1 : 0, toolInput.item_id, toolInput.notepad_id).run();
+      return { success: true, message: `Marked item [${toolInput.item_id}] as ${toolInput.done ? 'done' : 'undone'}` };
+    }
+    case "pin_notepad": {
+      const existing = await db.prepare('SELECT * FROM pinned_notepads WHERE notepad_id = ?').bind(toolInput.notepad_id).first();
+      if (existing) return { success: true, message: `Notepad [${toolInput.notepad_id}] already pinned` };
+      const pinned = await db.prepare('SELECT position FROM pinned_notepads ORDER BY position').all();
+      const usedPositions = new Set(pinned.results.map(p => p.position));
+      let position = null;
+      for (let i = 1; i <= 3; i++) {
+        if (!usedPositions.has(i)) { position = i; break; }
+      }
+      if (position === null) return { success: false, message: 'Maximum 3 notepads can be pinned' };
+      await db.prepare('INSERT INTO pinned_notepads (notepad_id, position) VALUES (?, ?)').bind(toolInput.notepad_id, position).run();
+      return { success: true, message: `Pinned notepad [${toolInput.notepad_id}]` };
+    }
+    case "unpin_notepad": {
+      await db.prepare('DELETE FROM pinned_notepads WHERE notepad_id = ?').bind(toolInput.notepad_id).run();
+      return { success: true, message: `Unpinned notepad [${toolInput.notepad_id}]` };
+    }
+    case "move_dump_to_tasks": {
+      const messy = await db.prepare('SELECT * FROM messy_tasks WHERE id = ?').bind(toolInput.id).first();
+      if (!messy) return { success: false, message: `Dump item [${toolInput.id}] not found` };
+      const maxSort = await db.prepare('SELECT COALESCE(MAX(sort_order), 0) + 1 as next FROM clean_tasks').first();
+      await db.prepare('INSERT INTO clean_tasks (id, text, sort_order) VALUES (?, ?, ?)').bind(toolInput.id, messy.text, maxSort.next).run();
+      await db.prepare('DELETE FROM messy_tasks WHERE id = ?').bind(toolInput.id).run();
+      return { success: true, id: toolInput.id, message: `Moved [${toolInput.id}] from dump to tasks` };
+    }
+    default:
+      return { success: false, message: `Unknown tool: ${toolName}` };
+  }
+}
+
 export async function handleAPI(request, env, path) {
   const db = env.DB;
   const method = request.method;
 
-  // POST /api/alice - Proxy to Anthropic API
+  // POST /api/alice - Proxy to Anthropic API with tools
   if (path === '/api/alice' && method === 'POST') {
     const body = await request.json();
     
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    // First call to Claude with tools
+    let response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -23,13 +244,54 @@ export async function handleAPI(request, env, path) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 500,
+        max_tokens: 1024,
         system: body.system,
-        messages: body.messages
+        messages: body.messages,
+        tools: ALICE_TOOLS
       })
     });
 
-    const data = await response.json();
+    let data = await response.json();
+    
+    // Handle tool use loop
+    let messages = [...body.messages];
+    while (data.stop_reason === 'tool_use') {
+      const assistantMessage = { role: 'assistant', content: data.content };
+      messages.push(assistantMessage);
+      
+      const toolResults = [];
+      for (const block of data.content) {
+        if (block.type === 'tool_use') {
+          const result = await executeAliceTool(db, block.name, block.input);
+          toolResults.push({
+            type: 'tool_result',
+            tool_use_id: block.id,
+            content: JSON.stringify(result)
+          });
+        }
+      }
+      
+      messages.push({ role: 'user', content: toolResults });
+      
+      response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': env.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1024,
+          system: body.system,
+          messages: messages,
+          tools: ALICE_TOOLS
+        })
+      });
+      
+      data = await response.json();
+    }
+
     return data;
   }
 
