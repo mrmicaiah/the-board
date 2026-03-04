@@ -27,6 +27,7 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
   <script type="text/babel">
     const { useState, useEffect, useMemo, useRef } = React;
     const API_BASE = '';
+    const ALICE_IMAGE = 'https://res.cloudinary.com/dxzw1zwez/image/upload/v1772644026/alice_profile_kpamkm.jpg';
 
     // Alice Chat Panel
     const AliceChat = ({ boardData, isOpen, onToggle }) => {
@@ -116,66 +117,77 @@ Be conversational, warm, and helpful. Keep responses concise. When you take acti
         return (
           <button onClick={onToggle} style={{
             position: 'fixed', left: 24, top: '50%', transform: 'translateY(-50%)',
-            width: 50, height: 50, borderRadius: '50%',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            border: 'none', color: 'white', fontSize: 24, cursor: 'pointer',
-            boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+            width: 56, height: 56, borderRadius: '50%',
+            background: '#FFD60A',
+            border: '3px solid #1a1a1a',
+            padding: 0, cursor: 'pointer',
+            boxShadow: '3px 3px 0 rgba(0,0,0,0.3)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 200
-          }}>A</button>
+            zIndex: 200, overflow: 'hidden'
+          }}>
+            <img src={ALICE_IMAGE} alt="Alice" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+          </button>
         );
       }
 
       return (
         <div style={{
           position: 'fixed', left: 24, top: 24, bottom: 24,
-          width: 320, backgroundColor: 'white',
-          borderRadius: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+          width: 320, backgroundColor: '#fef9c3',
+          borderRadius: 8, border: '3px solid #1a1a1a',
+          boxShadow: '6px 6px 0 rgba(0,0,0,0.2)',
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
           zIndex: 200
         }}>
           <div style={{
-            padding: '16px 20px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            padding: '14px 16px', backgroundColor: '#FFD60A',
+            borderBottom: '3px solid #1a1a1a',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 32, height: 32, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, color: 'white' }}>A</div>
-              <span style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 18, color: 'white' }}>Alice</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 40, height: 40, borderRadius: '50%', border: '2px solid #1a1a1a', overflow: 'hidden', flexShrink: 0 }}>
+                <img src={ALICE_IMAGE} alt="Alice" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+              <span style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 20, color: '#1a1a1a' }}>Alice</span>
             </div>
-            <button onClick={onToggle} style={{ background: 'none', border: 'none', color: 'white', fontSize: 20, cursor: 'pointer', opacity: 0.8 }}>✕</button>
+            <button onClick={onToggle} style={{ background: 'none', border: 'none', color: '#1a1a1a', fontSize: 22, cursor: 'pointer', fontFamily: "'Permanent Marker', cursive" }}>✕</button>
           </div>
           
-          <div style={{ flex: 1, overflow: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ flex: 1, overflow: 'auto', padding: 14, display: 'flex', flexDirection: 'column', gap: 10, backgroundColor: '#fef9c3' }}>
             {messages.map((msg, i) => (
               <div key={i} style={{
                 alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                maxWidth: '85%', padding: '10px 14px', borderRadius: 12,
-                backgroundColor: msg.role === 'user' ? '#667eea' : '#f3f4f6',
-                color: msg.role === 'user' ? 'white' : '#1a1a1a',
-                fontFamily: "'Architects Daughter', cursive", fontSize: 15, lineHeight: 1.4
+                maxWidth: '85%', padding: '10px 14px', borderRadius: 4,
+                backgroundColor: msg.role === 'user' ? '#1a1a1a' : '#fff',
+                color: msg.role === 'user' ? '#FFD60A' : '#1a1a1a',
+                border: msg.role === 'user' ? 'none' : '2px solid #1a1a1a',
+                fontFamily: "'Architects Daughter', cursive", fontSize: 15, lineHeight: 1.4,
+                boxShadow: '2px 2px 0 rgba(0,0,0,0.15)'
               }}>{msg.content}</div>
             ))}
             {loading && (
-              <div style={{ alignSelf: 'flex-start', padding: '10px 14px', borderRadius: 12, backgroundColor: '#f3f4f6', color: '#6b7280', fontStyle: 'italic' }}>typing...</div>
+              <div style={{ alignSelf: 'flex-start', padding: '10px 14px', borderRadius: 4, backgroundColor: '#fff', border: '2px solid #1a1a1a', color: '#6b7280', fontFamily: "'Architects Daughter', cursive", fontStyle: 'italic' }}>typing...</div>
             )}
             <div ref={messagesEndRef} />
           </div>
           
-          <div style={{ padding: 12, borderTop: '1px solid #e5e7eb', display: 'flex', gap: 8 }}>
+          <div style={{ padding: 12, borderTop: '3px solid #1a1a1a', backgroundColor: '#FFD60A', display: 'flex', gap: 8 }}>
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
               placeholder="Talk to Alice..."
               style={{
-                flex: 1, padding: '10px 14px', borderRadius: 8, border: '2px solid #e5e7eb',
-                fontFamily: "'Architects Daughter', cursive", fontSize: 15, outline: 'none'
+                flex: 1, padding: '10px 14px', borderRadius: 4, border: '2px solid #1a1a1a',
+                fontFamily: "'Architects Daughter', cursive", fontSize: 15, outline: 'none',
+                backgroundColor: '#fff'
               }}
             />
             <button onClick={sendMessage} disabled={loading} style={{
-              padding: '10px 16px', borderRadius: 8, border: 'none',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white', fontFamily: "'Permanent Marker', cursive", fontSize: 14, cursor: 'pointer'
+              padding: '10px 16px', borderRadius: 4, border: '2px solid #1a1a1a',
+              backgroundColor: '#1a1a1a',
+              color: '#FFD60A', fontFamily: "'Permanent Marker', cursive", fontSize: 14, cursor: 'pointer',
+              boxShadow: '2px 2px 0 rgba(0,0,0,0.2)'
             }}>Send</button>
           </div>
         </div>
