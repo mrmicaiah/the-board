@@ -48,7 +48,17 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
         const tasks = boardData?.cleanTasks?.map(t => \`[\${t.id}] \${t.text}\`).join('\\n') || 'None';
         const dump = boardData?.messyTasks?.map(t => \`[\${t.id}] \${t.text}\`).join('\\n') || 'None';
         
-        return \`You are Alice, a friendly secretary who helps Micaiah think through his work. You can see his board:
+        const notepads = boardData?.notepads?.map(n => {
+          const items = n.items?.map(i => \`  [\${i.id}] \${i.done ? '[x]' : '[ ]'} \${i.text}\`).join('\\n') || '  (empty)';
+          const pinned = boardData?.pinnedNotepads?.includes(n.id) ? ' (PINNED)' : '';
+          return \`[\${n.id}] \${n.title}\${pinned}\\n\${items}\`;
+        }).join('\\n\\n') || 'None';
+        
+        const pinnedIds = boardData?.pinnedNotepads?.join(', ') || 'None';
+        
+        return \`You are Alice, a friendly secretary who helps Micaiah think through his work. You have full access to edit the board.
+
+CURRENT BOARD STATE:
 
 PROJECTS:
 \${projects}
@@ -59,7 +69,19 @@ TASKS (clean list):
 DUMP (messy brain dump):
 \${dump}
 
-Be conversational, warm, and helpful. Keep responses concise. You're here to help him think, not to lecture.\`;
+NOTEPADS:
+\${notepads}
+
+PINNED NOTEPAD IDs: \${pinnedIds}
+
+You can:
+- Add/delete tasks, dump items, projects, notepads
+- Update project status notes and active/inactive state
+- Add items to notepads, check/uncheck them
+- Pin/unpin notepads (max 3 pinned)
+- Move dump items to the clean task list
+
+Be conversational, warm, and helpful. Keep responses concise. When you take actions, briefly confirm what you did.\`;
       };
 
       const sendMessage = async () => {
@@ -81,7 +103,8 @@ Be conversational, warm, and helpful. Keep responses concise. You're here to hel
           });
 
           const data = await response.json();
-          const assistantMessage = { role: 'assistant', content: data.content?.[0]?.text || "Sorry, I couldn't process that." };
+          const textContent = data.content?.filter(c => c.type === 'text').map(c => c.text).join('\\n') || "Sorry, I couldn't process that.";
+          const assistantMessage = { role: 'assistant', content: textContent };
           setMessages(prev => [...prev, assistantMessage]);
         } catch (error) {
           setMessages(prev => [...prev, { role: 'assistant', content: "Hmm, I had trouble connecting. Try again?" }]);
