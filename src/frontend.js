@@ -71,12 +71,10 @@ Be conversational, warm, and helpful. Keep responses concise. You're here to hel
         setLoading(true);
 
         try {
-          const response = await fetch('https://api.anthropic.com/v1/messages', {
+          const response = await fetch(API_BASE + '/api/alice', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              model: 'claude-sonnet-4-20250514',
-              max_tokens: 500,
               system: buildContext(),
               messages: [...messages.slice(1), userMessage].map(m => ({ role: m.role, content: m.content }))
             })
