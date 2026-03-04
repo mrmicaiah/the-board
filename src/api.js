@@ -10,6 +10,29 @@ export async function handleAPI(request, env, path) {
   const db = env.DB;
   const method = request.method;
 
+  // POST /api/alice - Proxy to Anthropic API
+  if (path === '/api/alice' && method === 'POST') {
+    const body = await request.json();
+    
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 500,
+        system: body.system,
+        messages: body.messages
+      })
+    });
+
+    const data = await response.json();
+    return data;
+  }
+
   // GET /api/board - Full board state
   if (path === '/api/board' && method === 'GET') {
     const projects = await db.prepare('SELECT * FROM projects ORDER BY sort_order, id').all();
