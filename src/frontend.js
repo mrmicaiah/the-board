@@ -94,21 +94,24 @@ Be conversational, warm, and helpful. Keep responses concise. You're here to hel
       if (!isOpen) {
         return (
           <button onClick={onToggle} style={{
-            position: 'absolute', left: 24, top: '50%', transform: 'translateY(-50%)',
+            position: 'fixed', left: 24, top: '50%', transform: 'translateY(-50%)',
             width: 50, height: 50, borderRadius: '50%',
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             border: 'none', color: 'white', fontSize: 24, cursor: 'pointer',
             boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 200
           }}>A</button>
         );
       }
 
       return (
         <div style={{
-          width: 320, height: 'calc(100vh - 48px)', backgroundColor: 'white',
+          position: 'fixed', left: 24, top: 24, bottom: 24,
+          width: 320, backgroundColor: 'white',
           borderRadius: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-          display: 'flex', flexDirection: 'column', overflow: 'hidden', flexShrink: 0
+          display: 'flex', flexDirection: 'column', overflow: 'hidden',
+          zIndex: 200
         }}>
           <div style={{
             padding: '16px 20px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -389,9 +392,6 @@ Be conversational, warm, and helpful. Keep responses concise. You're here to hel
           backgroundImage: "radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.05) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 200, 150, 0.08) 0%, transparent 50%)",
           display: 'flex', padding: 24, gap: 20, overflow: 'hidden'
         }}>
-          {/* Alice Chat */}
-          <AliceChat boardData={data} isOpen={aliceOpen} onToggle={() => setAliceOpen(!aliceOpen)} />
-
           {isEmpty ? <EmptyState /> : (
             <>
               {/* Projects column */}
@@ -433,6 +433,9 @@ Be conversational, warm, and helpful. Keep responses concise. You're here to hel
               ))}
             </div>
           )}
+
+          {/* Alice Chat - always on top */}
+          <AliceChat boardData={data} isOpen={aliceOpen} onToggle={() => setAliceOpen(!aliceOpen)} />
 
           {/* Expanded task modal */}
           {expandedTask && (
