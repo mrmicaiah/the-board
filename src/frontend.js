@@ -25,8 +25,138 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
 <body>
   <div id="root"></div>
   <script type="text/babel">
-    const { useState, useEffect, useMemo } = React;
+    const { useState, useEffect, useMemo, useRef } = React;
     const API_BASE = '';
+
+    // Alice Chat Panel
+    const AliceChat = ({ boardData, isOpen, onToggle }) => {
+      const [messages, setMessages] = useState([{ role: 'assistant', content: "Hey! I'm Alice. I can see your board - want to talk through anything?" }]);
+      const [input, setInput] = useState('');
+      const [loading, setLoading] = useState(false);
+      const messagesEndRef = useRef(null);
+
+      const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      };
+
+      useEffect(() => {
+        scrollToBottom();
+      }, [messages]);
+
+      const buildContext = () => {
+        const projects = boardData?.projects?.map(p => \`[\${p.id}] \${p.name} (\${p.active ? 'ACTIVE' : 'inactive'})\${p.status_notes ? ': ' + p.status_notes : ''}\`).join('\\n') || 'None';
+        const tasks = boardData?.cleanTasks?.map(t => \`[\${t.id}] \${t.text}\`).join('\\n') || 'None';
+        const dump = boardData?.messyTasks?.map(t => \`[\${t.id}] \${t.text}\`).join('\\n') || 'None';
+        
+        return \`You are Alice, a friendly secretary who helps Micaiah think through his work. You can see his board:
+
+PROJECTS:
+\${projects}
+
+TASKS (clean list):
+\${tasks}
+
+DUMP (messy brain dump):
+\${dump}
+
+Be conversational, warm, and helpful. Keep responses concise. You're here to help him think, not to lecture.\`;
+      };
+
+      const sendMessage = async () => {
+        if (!input.trim() || loading) return;
+        
+        const userMessage = { role: 'user', content: input };
+        setMessages(prev => [...prev, userMessage]);
+        setInput('');
+        setLoading(true);
+
+        try {
+          const response = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: 'claude-sonnet-4-20250514',
+              max_tokens: 500,
+              system: buildContext(),
+              messages: [...messages.slice(1), userMessage].map(m => ({ role: m.role, content: m.content }))
+            })
+          });
+
+          const data = await response.json();
+          const assistantMessage = { role: 'assistant', content: data.content?.[0]?.text || "Sorry, I couldn't process that." };
+          setMessages(prev => [...prev, assistantMessage]);
+        } catch (error) {
+          setMessages(prev => [...prev, { role: 'assistant', content: "Hmm, I had trouble connecting. Try again?" }]);
+        }
+        setLoading(false);
+      };
+
+      if (!isOpen) {
+        return (
+          <button onClick={onToggle} style={{
+            position: 'absolute', left: 24, top: '50%', transform: 'translateY(-50%)',
+            width: 50, height: 50, borderRadius: '50%',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            border: 'none', color: 'white', fontSize: 24, cursor: 'pointer',
+            boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>A</button>
+        );
+      }
+
+      return (
+        <div style={{
+          width: 320, height: 'calc(100vh - 48px)', backgroundColor: 'white',
+          borderRadius: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+          display: 'flex', flexDirection: 'column', overflow: 'hidden', flexShrink: 0
+        }}>
+          <div style={{
+            padding: '16px 20px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 32, height: 32, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, color: 'white' }}>A</div>
+              <span style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 18, color: 'white' }}>Alice</span>
+            </div>
+            <button onClick={onToggle} style={{ background: 'none', border: 'none', color: 'white', fontSize: 20, cursor: 'pointer', opacity: 0.8 }}>✕</button>
+          </div>
+          
+          <div style={{ flex: 1, overflow: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {messages.map((msg, i) => (
+              <div key={i} style={{
+                alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                maxWidth: '85%', padding: '10px 14px', borderRadius: 12,
+                backgroundColor: msg.role === 'user' ? '#667eea' : '#f3f4f6',
+                color: msg.role === 'user' ? 'white' : '#1a1a1a',
+                fontFamily: "'Architects Daughter', cursive", fontSize: 15, lineHeight: 1.4
+              }}>{msg.content}</div>
+            ))}
+            {loading && (
+              <div style={{ alignSelf: 'flex-start', padding: '10px 14px', borderRadius: 12, backgroundColor: '#f3f4f6', color: '#6b7280', fontStyle: 'italic' }}>typing...</div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+          
+          <div style={{ padding: 12, borderTop: '1px solid #e5e7eb', display: 'flex', gap: 8 }}>
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+              placeholder="Talk to Alice..."
+              style={{
+                flex: 1, padding: '10px 14px', borderRadius: 8, border: '2px solid #e5e7eb',
+                fontFamily: "'Architects Daughter', cursive", fontSize: 15, outline: 'none'
+              }}
+            />
+            <button onClick={sendMessage} disabled={loading} style={{
+              padding: '10px 16px', borderRadius: 8, border: 'none',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white', fontFamily: "'Permanent Marker', cursive", fontSize: 14, cursor: 'pointer'
+            }}>Send</button>
+          </div>
+        </div>
+      );
+    };
 
     // Number badge
     const NumberBadge = ({ number, size = 'normal' }) => {
@@ -215,6 +345,7 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
       const [data, setData] = useState(null);
       const [expandedTask, setExpandedTask] = useState(null);
       const [confirmDelete, setConfirmDelete] = useState(null);
+      const [aliceOpen, setAliceOpen] = useState(false);
 
       const fetchBoard = async () => {
         try {
@@ -258,6 +389,9 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
           backgroundImage: "radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.05) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 200, 150, 0.08) 0%, transparent 50%)",
           display: 'flex', padding: 24, gap: 20, overflow: 'hidden'
         }}>
+          {/* Alice Chat */}
+          <AliceChat boardData={data} isOpen={aliceOpen} onToggle={() => setAliceOpen(!aliceOpen)} />
+
           {isEmpty ? <EmptyState /> : (
             <>
               {/* Projects column */}
