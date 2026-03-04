@@ -180,17 +180,17 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
         boxShadow: '6px 6px 20px rgba(0,0,0,0.35), 0 0 0 2px #d4a017',
         display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden', ...style
       }}>
-        <div style={{ position: 'absolute', left: 48, top: 0, bottom: 0, width: 2, backgroundColor: '#f87171' }} />
-        <div style={{ position: 'absolute', top: -8, left: '30%', width: 60, height: 24, backgroundColor: 'rgba(200, 180, 150, 0.6)', transform: 'rotate(-2deg)', borderRadius: 2 }} />
-        <div style={{ position: 'absolute', top: -6, right: '25%', width: 50, height: 22, backgroundColor: 'rgba(200, 180, 150, 0.5)', transform: 'rotate(3deg)', borderRadius: 2 }} />
-        <div style={{ padding: '20px 20px 16px 60px', borderBottom: '2px solid #d4a017', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ position: 'absolute', left: 48, top: 0, bottom: 0, width: 2, backgroundColor: '#f87171', zIndex: 1 }} />
+        <div style={{ position: 'absolute', top: -8, left: '30%', width: 60, height: 24, backgroundColor: 'rgba(200, 180, 150, 0.6)', transform: 'rotate(-2deg)', borderRadius: 2, zIndex: 2 }} />
+        <div style={{ position: 'absolute', top: -6, right: '25%', width: 50, height: 22, backgroundColor: 'rgba(200, 180, 150, 0.5)', transform: 'rotate(3deg)', borderRadius: 2, zIndex: 2 }} />
+        <div style={{ padding: '20px 20px 16px 60px', borderBottom: '2px solid #d4a017', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, position: 'relative', zIndex: 1 }}>
           <NumberBadge number={notepad.id} />
           <h3 style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 26, color: '#1a1a1a', textDecoration: 'underline', textUnderlineOffset: 4 }}>{notepad.title}</h3>
         </div>
-        <div style={{ padding: '16px 20px 20px 60px', display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
+        <div style={{ padding: '16px 20px 20px 60px', display: 'flex', flexDirection: 'column', gap: 12, flex: 1, overflow: 'auto', position: 'relative', zIndex: 1 }}>
           {notepad.items?.map((item) => (
             <div key={item.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-              <div style={{ width: 22, height: 22, border: '2px solid #1a1a1a', borderRadius: 3, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 2 }}>
+              <div style={{ width: 22, height: 22, border: '2px solid #1a1a1a', borderRadius: 3, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 2, backgroundColor: 'white' }}>
                 {item.done ? <span style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 18, color: '#16a34a' }}>✓</span> : null}
               </div>
               <span style={{ fontFamily: "'Architects Daughter', cursive", fontSize: 19, color: item.done ? '#6b7280' : '#1a1a1a', textDecoration: item.done ? 'line-through' : 'none', lineHeight: 1.4 }}>{item.text}</span>
@@ -292,7 +292,8 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
               {pinnedNotepads.map((notepad, index) => (
                 <Notepad key={notepad.id} notepad={notepad} style={{
                   width: notepadCount === 1 ? 450 : notepadCount === 2 ? 400 : 350,
-                  maxHeight: '80vh',
+                  maxHeight: 'calc(100vh - 80px)',
+                  overflow: 'hidden',
                   transform: notepadCount === 3 ? \`rotate(\${(index - 1) * 2}deg)\` : notepadCount === 2 ? \`rotate(\${(index - 0.5) * 3}deg)\` : 'rotate(-1deg)'
                 }} />
               ))}
