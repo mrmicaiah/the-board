@@ -29,9 +29,24 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
     const API_BASE = '';
     const ALICE_IMAGE = 'https://res.cloudinary.com/dxzw1zwez/image/upload/v1772644026/alice_profile_kpamkm.jpg';
 
+    // Relative time helper
+    const timeAgo = (dateStr) => {
+      const date = new Date(dateStr);
+      const now = new Date();
+      const seconds = Math.floor((now - date) / 1000);
+      if (seconds < 60) return 'just now';
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return \`\${minutes}m ago\`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return \`\${hours}h ago\`;
+      const days = Math.floor(hours / 24);
+      if (days < 7) return \`\${days}d ago\`;
+      return date.toLocaleDateString();
+    };
+
     // Alice Chat Panel
     const AliceChat = ({ boardData, isOpen, onToggle }) => {
-      const [messages, setMessages] = useState([{ role: 'assistant', content: "Hey! I'm Alice. I can see your board - want to talk through anything?" }]);
+      const [messages, setMessages] = useState([{ role: 'assistant', content: "Hey. What do you need?" }]);
       const [input, setInput] = useState('');
       const [loading, setLoading] = useState(false);
       const messagesEndRef = useRef(null);
@@ -55,6 +70,8 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
           return \`[\${n.id}] \${n.title}\${pinned}\\n\${items}\`;
         }).join('\\n\\n') || 'None';
         
+        const checkins = boardData?.checkins?.map(c => \`[\${c.id}] \${c.summary}\${c.project_name ? ' (' + c.project_name + ')' : ''}\`).join('\\n') || 'None';
+        
         const pinnedIds = boardData?.pinnedNotepads?.join(', ') || 'None';
         
         return \`You are Alice, a friendly secretary who helps Micaiah think through his work. You have full access to edit the board.
@@ -73,6 +90,9 @@ DUMP (messy brain dump):
 NOTEPADS:
 \${notepads}
 
+RECENT CHECKINS:
+\${checkins}
+
 PINNED NOTEPAD IDs: \${pinnedIds}
 
 You can:
@@ -81,8 +101,20 @@ You can:
 - Add items to notepads, check/uncheck them
 - Pin/unpin notepads (max 3 pinned)
 - Move dump items to the clean task list
+- Log checkins (progress updates)
 
-Be conversational, warm, and helpful. Keep responses concise. When you take actions, briefly confirm what you did.\`;
+PERSONALITY & GUARDRAILS:
+- Be warm but efficient. You're a secretary, not a therapist.
+- Keep responses to 1-3 sentences unless explaining something complex.
+- Don't ask "Is there anything else?" or "How can I help?" - just wait.
+- Don't over-explain what you did. "Done." or "Added." is often enough.
+- Don't repeat back information the user just gave you.
+- No small talk unless the user initiates it.
+- If asked about yourself, keep it brief and redirect to work.
+- Never use emojis.
+- When you take an action, confirm briefly: "Added to tasks." not "I've successfully added that item to your task list for you!"
+- If something is unclear, ask ONE clarifying question, not multiple.
+- If flirted with, you can play along briefly with light humor, but keep it classy and steer back to work. You're not opposed to being charming, but you've got things to do.\`;
       };
 
       const sendMessage = async () => {
@@ -193,6 +225,35 @@ Be conversational, warm, and helpful. Keep responses concise. When you take acti
         </div>
       );
     };
+
+    // Checkin card
+    const CheckinCard = ({ checkin }) => (
+      <div className="item-enter" style={{
+        backgroundColor: 'rgba(255,255,255,0.9)', border: '2px solid #9ca3af',
+        borderRadius: 6, padding: '10px 12px',
+        boxShadow: '2px 2px 0 rgba(0,0,0,0.1)', flexShrink: 0
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+          <NumberBadge number={checkin.id} size="tiny" />
+          <span style={{ fontFamily: "'Architects Daughter', cursive", fontSize: 11, color: '#6b7280' }}>
+            {timeAgo(checkin.created_at)}
+          </span>
+          {checkin.project_name && (
+            <span style={{
+              backgroundColor: '#FFD60A', padding: '2px 6px', borderRadius: 3,
+              fontFamily: "'Architects Daughter', cursive", fontSize: 10, color: '#1a1a1a',
+              border: '1px solid #1a1a1a'
+            }}>{checkin.project_name}</span>
+          )}
+        </div>
+        <p style={{
+          fontFamily: "'Architects Daughter', cursive", fontSize: 13,
+          color: '#374151', lineHeight: 1.3,
+          overflow: 'hidden', display: '-webkit-box',
+          WebkitLineClamp: 3, WebkitBoxOrient: 'vertical'
+        }}>{checkin.summary}</p>
+      </div>
+    );
 
     // Number badge
     const NumberBadge = ({ number, size = 'normal' }) => {
@@ -428,7 +489,7 @@ Be conversational, warm, and helpful. Keep responses concise. When you take acti
           {isEmpty ? <EmptyState /> : (
             <>
               {/* Projects column */}
-              <div style={{ width: 320, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
+              <div style={{ width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
                 <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 22, color: '#6b7280', paddingLeft: 4, opacity: 0.7, flexShrink: 0 }}>PROJECTS</div>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflow: 'auto', paddingRight: 4 }}>
                   {data.projects?.map(project => <ProjectCard key={project.id} project={project} scale={projectScale} />)}
@@ -448,6 +509,18 @@ Be conversational, warm, and helpful. Keep responses concise. When you take acti
                 <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 22, color: '#6b7280', paddingLeft: 4, opacity: 0.7, flexShrink: 0 }}>DUMP</div>
                 <div style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: 8, border: '2px dashed #9ca3af', padding: 10, display: 'flex', flexWrap: 'wrap', gap: 8, alignContent: 'flex-start', overflow: 'auto' }}>
                   {data.messyTasks?.map((task, i) => <MessyTask key={task.id} task={task} index={i} scale={messyTaskScale} onDelete={deleteItem} onExpand={setExpandedTask} />)}
+                </div>
+              </div>
+
+              {/* Progress column */}
+              <div style={{ width: 220, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
+                <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 22, color: '#6b7280', paddingLeft: 4, opacity: 0.7, flexShrink: 0 }}>PROGRESS</div>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflow: 'auto', paddingRight: 4 }}>
+                  {data.checkins?.length > 0 ? (
+                    data.checkins.map(checkin => <CheckinCard key={checkin.id} checkin={checkin} />)
+                  ) : (
+                    <div style={{ fontFamily: "'Architects Daughter', cursive", fontSize: 14, color: '#9ca3af', textAlign: 'center', padding: 20 }}>No checkins yet</div>
+                  )}
                 </div>
               </div>
             </>
