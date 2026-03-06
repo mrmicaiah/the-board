@@ -226,12 +226,13 @@ PERSONALITY & GUARDRAILS:
       );
     };
 
-    // Checkin card
-    const CheckinCard = ({ checkin }) => (
-      <div className="item-enter" style={{
+    // Checkin card (clickable)
+    const CheckinCard = ({ checkin, onExpand }) => (
+      <div className="item-enter" onClick={() => onExpand(checkin)} style={{
         backgroundColor: 'rgba(255,255,255,0.9)', border: '2px solid #9ca3af',
         borderRadius: 6, padding: '10px 12px',
-        boxShadow: '2px 2px 0 rgba(0,0,0,0.1)', flexShrink: 0
+        boxShadow: '2px 2px 0 rgba(0,0,0,0.1)', flexShrink: 0,
+        cursor: 'pointer', transition: 'transform 0.1s',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
           <NumberBadge number={checkin.id} size="tiny" />
@@ -441,6 +442,7 @@ PERSONALITY & GUARDRAILS:
     const Whiteboard = () => {
       const [data, setData] = useState(null);
       const [expandedTask, setExpandedTask] = useState(null);
+      const [expandedCheckin, setExpandedCheckin] = useState(null);
       const [confirmDelete, setConfirmDelete] = useState(null);
       const [aliceOpen, setAliceOpen] = useState(false);
 
@@ -517,7 +519,7 @@ PERSONALITY & GUARDRAILS:
                 <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 22, color: '#6b7280', paddingLeft: 4, opacity: 0.7, flexShrink: 0 }}>PROGRESS</div>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflow: 'auto', paddingRight: 4 }}>
                   {data.checkins?.length > 0 ? (
-                    data.checkins.map(checkin => <CheckinCard key={checkin.id} checkin={checkin} />)
+                    data.checkins.map(checkin => <CheckinCard key={checkin.id} checkin={checkin} onExpand={setExpandedCheckin} />)
                   ) : (
                     <div style={{ fontFamily: "'Architects Daughter', cursive", fontSize: 14, color: '#9ca3af', textAlign: 'center', padding: 20 }}>No checkins yet</div>
                   )}
@@ -555,6 +557,38 @@ PERSONALITY & GUARDRAILS:
                 <div style={{ display: 'flex', gap: 12 }}>
                   <button onClick={() => copyToClipboard(expandedTask.text)} style={{ padding: '12px 24px', backgroundColor: '#1a1a2e', color: 'white', border: 'none', borderRadius: 6, fontFamily: "'Permanent Marker', cursive", fontSize: 16, cursor: 'pointer' }}>📋 Copy</button>
                   <button onClick={() => setExpandedTask(null)} style={{ padding: '12px 24px', backgroundColor: 'transparent', color: '#1a1a1a', border: '2px solid #1a1a1a', borderRadius: 6, fontFamily: "'Permanent Marker', cursive", fontSize: 16, cursor: 'pointer' }}>Close</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Expanded checkin modal */}
+          {expandedCheckin && (
+            <div onClick={() => setExpandedCheckin(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 40 }}>
+              <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: 'white', padding: 32, borderRadius: 8, boxShadow: '8px 8px 24px rgba(0,0,0,0.4)', maxWidth: 600, width: '100%', maxHeight: 'calc(100vh - 80px)', overflow: 'auto' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
+                  <NumberBadge number={expandedCheckin.id} size="normal" />
+                  <span style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 20, color: '#6b7280' }}>CHECKIN</span>
+                  <span style={{ fontFamily: "'Architects Daughter', cursive", fontSize: 14, color: '#9ca3af', marginLeft: 'auto' }}>
+                    {timeAgo(expandedCheckin.created_at)}
+                  </span>
+                </div>
+                {expandedCheckin.project_name && (
+                  <div style={{ marginBottom: 16 }}>
+                    <span style={{
+                      backgroundColor: '#FFD60A', padding: '4px 10px', borderRadius: 4,
+                      fontFamily: "'Architects Daughter', cursive", fontSize: 14, color: '#1a1a1a',
+                      border: '2px solid #1a1a1a'
+                    }}>{expandedCheckin.project_name}</span>
+                  </div>
+                )}
+                <div style={{ fontFamily: "'Architects Daughter', cursive", fontSize: 22, color: '#1a1a1a', lineHeight: 1.5, marginBottom: 24, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{expandedCheckin.summary}</div>
+                {expandedCheckin.details && (
+                  <div style={{ fontFamily: "'Architects Daughter', cursive", fontSize: 16, color: '#4b5563', lineHeight: 1.5, marginBottom: 24, whiteSpace: 'pre-wrap', wordBreak: 'break-word', padding: 16, backgroundColor: '#f3f4f6', borderRadius: 6 }}>{expandedCheckin.details}</div>
+                )}
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <button onClick={() => copyToClipboard(expandedCheckin.summary)} style={{ padding: '12px 24px', backgroundColor: '#1a1a2e', color: 'white', border: 'none', borderRadius: 6, fontFamily: "'Permanent Marker', cursive", fontSize: 16, cursor: 'pointer' }}>📋 Copy</button>
+                  <button onClick={() => setExpandedCheckin(null)} style={{ padding: '12px 24px', backgroundColor: 'transparent', color: '#1a1a1a', border: '2px solid #1a1a1a', borderRadius: 6, fontFamily: "'Permanent Marker', cursive", fontSize: 16, cursor: 'pointer' }}>Close</button>
                 </div>
               </div>
             </div>
