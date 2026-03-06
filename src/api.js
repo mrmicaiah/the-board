@@ -135,6 +135,19 @@ const ALICE_TOOLS = [
       },
       required: ["id"]
     }
+  },
+  {
+    name: "add_checkin",
+    description: "Log a progress update or work session recap",
+    input_schema: {
+      type: "object",
+      properties: {
+        summary: { type: "string", description: "Short recap, ~280 chars, casual/fun tone" },
+        details: { type: "string", description: "Optional longer notes in markdown" },
+        project_id: { type: "number", description: "Optional project badge number to link to" }
+      },
+      required: ["summary"]
+    }
   }
 ];
 
@@ -172,7 +185,7 @@ async function executeAliceTool(db, toolName, toolInput) {
       return { success: true, id: toolInput.id, message: `Updated project [${toolInput.id}]` };
     }
     case "delete_item": {
-      const tables = ['projects', 'clean_tasks', 'messy_tasks', 'notepads', 'notepad_items'];
+      const tables = ['projects', 'clean_tasks', 'messy_tasks', 'notepads', 'notepad_items', 'checkins'];
       for (const table of tables) {
         const result = await db.prepare(`DELETE FROM ${table} WHERE id = ?`).bind(toolInput.id).run();
         if (result.meta.changes > 0) {
@@ -220,6 +233,12 @@ async function executeAliceTool(db, toolName, toolInput) {
       await db.prepare('INSERT INTO clean_tasks (id, text, sort_order) VALUES (?, ?, ?)').bind(toolInput.id, messy.text, maxSort.next).run();
       await db.prepare('DELETE FROM messy_tasks WHERE id = ?').bind(toolInput.id).run();
       return { success: true, id: toolInput.id, message: `Moved [${toolInput.id}] from dump to tasks` };
+    }
+    case "add_checkin": {
+      const id = await getNextId(db);
+      await db.prepare('INSERT INTO checkins (id, summary, details, project_id) VALUES (?, ?, ?, ?)')
+        .bind(id, toolInput.summary, toolInput.details || null, toolInput.project_id || null).run();
+      return { success: true, id, message: `Logged checkin [${id}]` };
     }
     default:
       return { success: false, message: `Unknown tool: ${toolName}` };
@@ -303,6 +322,7 @@ export async function handleAPI(request, env, path) {
     const notepads = await db.prepare('SELECT * FROM notepads ORDER BY id').all();
     const notepadItems = await db.prepare('SELECT * FROM notepad_items ORDER BY notepad_id, sort_order, id').all();
     const pinnedNotepads = await db.prepare('SELECT * FROM pinned_notepads ORDER BY position').all();
+    const checkins = await db.prepare('SELECT c.*, p.name as project_name FROM checkins c LEFT JOIN projects p ON c.project_id = p.id ORDER BY c.created_at DESC LIMIT 10').all();
 
     const notepadsWithItems = notepads.results.map(notepad => ({
       ...notepad,
@@ -315,7 +335,33 @@ export async function handleAPI(request, env, path) {
       messyTasks: messyTasks.results,
       notepads: notepadsWithItems,
       pinnedNotepads: pinnedNotepads.results.map(p => p.notepad_id),
+      checkins: checkins.results,
     };
+  }
+
+  // GET /api/checkins - List checkins
+  if (path === '/api/checkins' && method === 'GET') {
+    const url = new URL(request.url);
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+    const checkins = await db.prepare('SELECT c.*, p.name as project_name FROM checkins c LEFT JOIN projects p ON c.project_id = p.id ORDER BY c.created_at DESC LIMIT ?').bind(limit).all();
+    return { checkins: checkins.results };
+  }
+
+  // POST /api/checkins - Create checkin
+  if (path === '/api/checkins' && method === 'POST') {
+    const body = await request.json();
+    const id = await getNextId(db);
+    await db.prepare('INSERT INTO checkins (id, summary, details, project_id) VALUES (?, ?, ?, ?)')
+      .bind(id, body.summary, body.details || null, body.project_id || null).run();
+    return { id, summary: body.summary, success: true };
+  }
+
+  // DELETE /api/checkins/:id
+  const deleteCheckinMatch = path.match(/^\/api\/checkins\/(\d+)$/);
+  if (deleteCheckinMatch && method === 'DELETE') {
+    const id = parseInt(deleteCheckinMatch[1]);
+    await db.prepare('DELETE FROM checkins WHERE id = ?').bind(id).run();
+    return { id, success: true };
   }
 
   // POST /api/projects - Create project
@@ -546,7 +592,7 @@ export async function handleAPI(request, env, path) {
     const id = parseInt(deleteAnyMatch[1]);
     
     let deleted = false;
-    const tables = ['projects', 'clean_tasks', 'messy_tasks', 'notepads', 'notepad_items'];
+    const tables = ['projects', 'clean_tasks', 'messy_tasks', 'notepads', 'notepad_items', 'checkins'];
     
     for (const table of tables) {
       const result = await db.prepare(`DELETE FROM ${table} WHERE id = ?`).bind(id).run();
