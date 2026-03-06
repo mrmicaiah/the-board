@@ -1,7 +1,26 @@
 // API handlers for The Board
 
-// Get next global ID
+const MAX_ID = 200; // Rotating ID pool
+
+// Get next available ID (1-200, recycling)
 async function getNextId(db) {
+  // Get all currently used IDs across all tables
+  const tables = ['projects', 'clean_tasks', 'messy_tasks', 'notepads', 'notepad_items', 'checkins'];
+  const usedIds = new Set();
+  
+  for (const table of tables) {
+    const result = await db.prepare(`SELECT id FROM ${table}`).all();
+    result.results.forEach(row => usedIds.add(row.id));
+  }
+  
+  // Find first available ID from 1-200
+  for (let i = 1; i <= MAX_ID; i++) {
+    if (!usedIds.has(i)) {
+      return i;
+    }
+  }
+  
+  // If all 200 are used, fall back to incrementing (shouldn't happen in normal use)
   const result = await db.prepare('UPDATE global_counter SET next_id = next_id + 1 WHERE id = 1 RETURNING next_id - 1 as id').first();
   return result.id;
 }
