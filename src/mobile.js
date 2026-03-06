@@ -11,7 +11,7 @@ export const MOBILE_HTML = `<!DOCTYPE html>
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="icon" type="image/png" href="/icon.png">
   <title>The Board</title>
-  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Permanent+Marker&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Permanent+Marker&family=Architects+Daughter&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f0; min-height: 100vh; padding-bottom: 80px; }
@@ -25,6 +25,7 @@ export const MOBILE_HTML = `<!DOCTYPE html>
     .project-card.active { border-left-color: #22c55e; }
     .project-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
     .badge { background: #FFD60A; color: #1a1a1a; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; flex-shrink: 0; }
+    .badge.small { width: 22px; height: 22px; font-size: 11px; }
     .project-name { font-family: 'Permanent Marker', cursive; font-size: 20px; flex: 1; }
     .status-light { width: 16px; height: 16px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 8px #ef4444; }
     .status-light.active { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
@@ -48,19 +49,52 @@ export const MOBILE_HTML = `<!DOCTYPE html>
     .notepad-check.done { color: #16a34a; font-weight: bold; }
     .notepad-item-text { font-family: 'Caveat', cursive; font-size: 17px; flex: 1; }
     .notepad-item-text.done { text-decoration: line-through; color: #6b7280; }
+    .checkin-card { background: white; border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); cursor: pointer; }
+    .checkin-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .checkin-time { font-size: 12px; color: #9ca3af; font-family: "Architects Daughter", cursive; }
+    .checkin-project { background: #FFD60A; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+    .checkin-summary { font-family: "Architects Daughter", cursive; font-size: 15px; color: #374151; line-height: 1.4; }
     .fab { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: #FFD60A; border: none; font-size: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; z-index: 200; }
     .fab:active { transform: scale(0.95); }
+    .alice-fab { position: fixed; bottom: 20px; left: 20px; width: 50px; height: 50px; border-radius: 50%; background: #FFD60A; border: 3px solid #1a1a1a; padding: 0; cursor: pointer; z-index: 200; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .alice-fab img { width: 100%; height: 100%; object-fit: cover; }
+    .alice-fab:active { transform: scale(0.95); }
     .empty { text-align: center; padding: 40px 20px; color: #9ca3af; }
     .empty-icon { font-size: 48px; margin-bottom: 12px; }
-    .tabs { display: flex; background: white; border-radius: 8px; margin: 16px; padding: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
-    .tab { flex: 1; padding: 10px; border: none; background: none; font-size: 14px; font-weight: 600; color: #6b7280; cursor: pointer; border-radius: 6px; }
+    .tabs { display: flex; background: white; border-radius: 8px; margin: 16px; padding: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); flex-wrap: wrap; }
+    .tab { flex: 1; padding: 10px 6px; border: none; background: none; font-size: 13px; font-weight: 600; color: #6b7280; cursor: pointer; border-radius: 6px; min-width: 60px; }
     .tab.active { background: #FFD60A; color: #1a1a1a; }
     .loading { text-align: center; padding: 60px 20px; color: #6b7280; }
+    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 300; padding: 20px; flex-direction: column; justify-content: center; }
+    .modal-content { background: white; border-radius: 16px; padding: 20px; max-width: 400px; margin: 0 auto; width: 100%; max-height: 80vh; overflow-y: auto; }
+    .modal-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .modal-title { font-family: 'Permanent Marker', cursive; font-size: 18px; color: #6b7280; }
+    .modal-body { font-family: "Architects Daughter", cursive; font-size: 18px; color: #1a1a1a; line-height: 1.5; margin-bottom: 20px; white-space: pre-wrap; }
+    .modal-details { font-family: "Architects Daughter", cursive; font-size: 15px; color: #4b5563; padding: 12px; background: #f3f4f6; border-radius: 8px; margin-bottom: 20px; white-space: pre-wrap; }
+    .modal-actions { display: flex; gap: 12px; }
+    .modal-btn { flex: 1; padding: 12px; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: 600; }
+    .modal-btn.secondary { background: white; border: 2px solid #e5e7eb; }
+    .modal-btn.primary { background: #1a1a2e; color: white; border: none; }
+    .alice-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 400; flex-direction: column; }
+    .alice-chat { flex: 1; display: flex; flex-direction: column; background: #fef9c3; max-height: 100%; }
+    .alice-header { padding: 16px; background: #FFD60A; display: flex; align-items: center; gap: 12px; }
+    .alice-avatar { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #1a1a1a; overflow: hidden; }
+    .alice-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .alice-name { font-family: 'Permanent Marker', cursive; font-size: 22px; flex: 1; }
+    .alice-close { background: none; border: none; font-size: 24px; cursor: pointer; padding: 8px; }
+    .alice-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .alice-msg { max-width: 85%; padding: 12px 16px; border-radius: 12px; font-family: "Architects Daughter", cursive; font-size: 16px; line-height: 1.4; }
+    .alice-msg.user { align-self: flex-end; background: #1a1a1a; color: #FFD60A; }
+    .alice-msg.assistant { align-self: flex-start; background: white; border: 2px solid #1a1a1a; }
+    .alice-msg.typing { color: #6b7280; font-style: italic; }
+    .alice-input-area { padding: 12px; background: #FFD60A; display: flex; gap: 10px; }
+    .alice-input { flex: 1; padding: 12px 16px; border: 2px solid #1a1a1a; border-radius: 8px; font-size: 16px; font-family: "Architects Daughter", cursive; background: white; }
+    .alice-send { padding: 12px 20px; background: #1a1a1a; color: #FFD60A; border: none; border-radius: 8px; font-family: 'Permanent Marker', cursive; font-size: 16px; cursor: pointer; }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>📋 THE BOARD</h1>
+    <h1>THE BOARD</h1>
     <button class="refresh" onclick="loadData()">↻</button>
   </div>
 
@@ -69,25 +103,87 @@ export const MOBILE_HTML = `<!DOCTYPE html>
     <button class="tab" onclick="showTab('tasks')">Tasks</button>
     <button class="tab" onclick="showTab('dump')">Dump</button>
     <button class="tab" onclick="showTab('notepads')">Pads</button>
+    <button class="tab" onclick="showTab('progress')">Progress</button>
   </div>
 
   <div id="content"><div class="loading">Loading...</div></div>
 
+  <button class="alice-fab" onclick="openAlice()">
+    <img src="https://res.cloudinary.com/dxzw1zwez/image/upload/v1772644026/alice_profile_kpamkm.jpg" alt="Alice" />
+  </button>
+
   <button class="fab" onclick="openQuickAdd()">+</button>
 
-  <div id="quickAddModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:300;padding:20px;flex-direction:column;justify-content:center;">
-    <div style="background:white;border-radius:16px;padding:20px;max-width:400px;margin:0 auto;width:100%;">
+  <!-- Quick Add Modal -->
+  <div id="quickAddModal" class="modal">
+    <div class="modal-content">
       <textarea id="quickInput" placeholder="What's on your mind?" style="width:100%;height:100px;padding:12px;font-size:16px;border:2px solid #e5e7eb;border-radius:8px;resize:none;font-family:inherit;"></textarea>
-      <div style="display:flex;gap:12px;margin-top:12px;">
-        <button onclick="closeQuickAdd()" style="flex:1;padding:12px;border:2px solid #e5e7eb;background:white;border-radius:8px;font-size:16px;cursor:pointer;">Cancel</button>
-        <button onclick="submitQuickAdd()" style="flex:1;padding:12px;border:none;background:#FFD60A;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;">Add</button>
+      <div class="modal-actions" style="margin-top:12px;">
+        <button class="modal-btn secondary" onclick="closeQuickAdd()">Cancel</button>
+        <button class="modal-btn primary" onclick="submitQuickAdd()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Checkin Detail Modal -->
+  <div id="checkinModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="badge" id="checkinBadge"></div>
+        <div class="modal-title">CHECKIN</div>
+        <div class="checkin-time" id="checkinTime"></div>
+      </div>
+      <div id="checkinProject" style="margin-bottom:12px;"></div>
+      <div class="modal-body" id="checkinSummary"></div>
+      <div class="modal-details" id="checkinDetails" style="display:none;"></div>
+      <div class="modal-actions">
+        <button class="modal-btn secondary" onclick="closeCheckinModal()">Close</button>
+        <button class="modal-btn primary" onclick="copyCheckin()">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alice Chat Modal -->
+  <div id="aliceModal" class="alice-modal">
+    <div class="alice-chat">
+      <div class="alice-header">
+        <div class="alice-avatar">
+          <img src="https://res.cloudinary.com/dxzw1zwez/image/upload/v1772644026/alice_profile_kpamkm.jpg" alt="Alice" />
+        </div>
+        <div class="alice-name">Alice</div>
+        <button class="alice-close" onclick="closeAlice()">✕</button>
+      </div>
+      <div class="alice-messages" id="aliceMessages">
+        <div class="alice-msg assistant">Hey. What do you need?</div>
+      </div>
+      <div class="alice-input-area">
+        <input type="text" class="alice-input" id="aliceInput" placeholder="Talk to Alice..." onkeydown="if(event.key==='Enter')sendAlice()" />
+        <button class="alice-send" onclick="sendAlice()">Send</button>
       </div>
     </div>
   </div>
 
   <script>
+    const ALICE_IMAGE = 'https://res.cloudinary.com/dxzw1zwez/image/upload/v1772644026/alice_profile_kpamkm.jpg';
     let data = null;
     let activeTab = 'projects';
+    let aliceMessages = [{ role: 'assistant', content: "Hey. What do you need?" }];
+    let aliceLoading = false;
+    let currentCheckin = null;
+
+    function timeAgo(dateStr) {
+      const date = new Date(dateStr);
+      const now = new Date();
+      const seconds = Math.floor((now - date) / 1000);
+      if (seconds < 60) return 'just now';
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return minutes + 'm ago';
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return hours + 'h ago';
+      const days = Math.floor(hours / 24);
+      if (days < 7) return days + 'd ago';
+      return date.toLocaleDateString();
+    }
 
     function openQuickAdd() {
       document.getElementById('quickAddModal').style.display = 'flex';
@@ -105,6 +201,97 @@ export const MOBILE_HTML = `<!DOCTYPE html>
       await fetch('/api/tasks/messy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
       closeQuickAdd();
       loadData();
+    }
+
+    function openCheckinModal(checkin) {
+      currentCheckin = checkin;
+      document.getElementById('checkinBadge').textContent = checkin.id;
+      document.getElementById('checkinTime').textContent = timeAgo(checkin.created_at);
+      document.getElementById('checkinSummary').textContent = checkin.summary;
+      if (checkin.project_name) {
+        document.getElementById('checkinProject').innerHTML = '<span class="checkin-project">' + checkin.project_name + '</span>';
+        document.getElementById('checkinProject').style.display = 'block';
+      } else {
+        document.getElementById('checkinProject').style.display = 'none';
+      }
+      if (checkin.details) {
+        document.getElementById('checkinDetails').textContent = checkin.details;
+        document.getElementById('checkinDetails').style.display = 'block';
+      } else {
+        document.getElementById('checkinDetails').style.display = 'none';
+      }
+      document.getElementById('checkinModal').style.display = 'flex';
+    }
+
+    function closeCheckinModal() {
+      document.getElementById('checkinModal').style.display = 'none';
+      currentCheckin = null;
+    }
+
+    function copyCheckin() {
+      if (currentCheckin) navigator.clipboard.writeText(currentCheckin.summary);
+      closeCheckinModal();
+    }
+
+    function openAlice() {
+      document.getElementById('aliceModal').style.display = 'flex';
+      document.getElementById('aliceInput').focus();
+      scrollAlice();
+    }
+
+    function closeAlice() {
+      document.getElementById('aliceModal').style.display = 'none';
+    }
+
+    function scrollAlice() {
+      const msgs = document.getElementById('aliceMessages');
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function renderAliceMessages() {
+      const container = document.getElementById('aliceMessages');
+      container.innerHTML = aliceMessages.map(m => 
+        '<div class="alice-msg ' + m.role + '">' + m.content + '</div>'
+      ).join('') + (aliceLoading ? '<div class="alice-msg assistant typing">typing...</div>' : '');
+      scrollAlice();
+    }
+
+    function buildAliceContext() {
+      const projects = data?.projects?.map(p => '[' + p.id + '] ' + p.name + ' (' + (p.active ? 'ACTIVE' : 'inactive') + ')' + (p.status_notes ? ': ' + p.status_notes : '')).join('\\n') || 'None';
+      const tasks = data?.cleanTasks?.map(t => '[' + t.id + '] ' + t.text).join('\\n') || 'None';
+      const dump = data?.messyTasks?.map(t => '[' + t.id + '] ' + t.text).join('\\n') || 'None';
+      const checkins = data?.checkins?.map(c => '[' + c.id + '] ' + c.summary + (c.project_name ? ' (' + c.project_name + ')' : '')).join('\\n') || 'None';
+      return 'You are Alice, a friendly secretary who helps Micaiah think through his work. You have full access to edit the board.\\n\\nCURRENT BOARD STATE:\\n\\nPROJECTS:\\n' + projects + '\\n\\nTASKS:\\n' + tasks + '\\n\\nDUMP:\\n' + dump + '\\n\\nRECENT CHECKINS:\\n' + checkins + '\\n\\nPERSONALITY: Be warm but efficient. Keep responses to 1-3 sentences. No emojis. Brief confirmations only.';
+    }
+
+    async function sendAlice() {
+      const input = document.getElementById('aliceInput');
+      const text = input.value.trim();
+      if (!text || aliceLoading) return;
+      
+      input.value = '';
+      aliceMessages.push({ role: 'user', content: text });
+      aliceLoading = true;
+      renderAliceMessages();
+
+      try {
+        const res = await fetch('/api/alice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system: buildAliceContext(),
+            messages: aliceMessages.slice(1).map(m => ({ role: m.role, content: m.content }))
+          })
+        });
+        const data = await res.json();
+        const reply = data.content?.filter(c => c.type === 'text').map(c => c.text).join('\\n') || "Sorry, couldn't process that.";
+        aliceMessages.push({ role: 'assistant', content: reply });
+        loadData();
+      } catch (e) {
+        aliceMessages.push({ role: 'assistant', content: "Hmm, trouble connecting. Try again?" });
+      }
+      aliceLoading = false;
+      renderAliceMessages();
     }
 
     async function loadData() {
@@ -148,6 +335,10 @@ export const MOBILE_HTML = `<!DOCTYPE html>
           const isPinned = data.pinnedNotepads?.includes(n.id);
           return '<div class="notepad-card"><div class="notepad-header"><div class="badge">' + n.id + '</div><div class="notepad-title">' + n.title + '</div><button class="notepad-pin" onclick="togglePin(' + n.id + ', ' + isPinned + ')">' + (isPinned ? '📌' : '📍') + '</button></div>' + (n.items?.map(item => '<div class="notepad-item"><div class="notepad-check ' + (item.done ? 'done' : '') + '" onclick="toggleCheck(' + n.id + ', ' + item.id + ', ' + item.done + ')">' + (item.done ? '✓' : '') + '</div><div class="notepad-item-text ' + (item.done ? 'done' : '') + '">' + item.text + '</div></div>').join('') || '<div style="color:#9ca3af;font-style:italic;padding:8px 0;">Empty notepad</div>') + '</div>';
         }).join('') + '</div>';
+      }
+      else if (activeTab === 'progress') {
+        if (!data.checkins?.length) { content.innerHTML = '<div class="empty"><div class="empty-icon">📊</div>No checkins yet</div>'; return; }
+        content.innerHTML = '<div class="section"><div class="section-title">Progress <span class="count">' + data.checkins.length + '</span></div>' + data.checkins.map(c => '<div class="checkin-card" onclick=\'openCheckinModal(' + JSON.stringify(c).replace(/'/g, "\\'") + ')\'><div class="checkin-header"><div class="badge small">' + c.id + '</div><div class="checkin-time">' + timeAgo(c.created_at) + '</div>' + (c.project_name ? '<span class="checkin-project">' + c.project_name + '</span>' : '') + '</div><div class="checkin-summary">' + c.summary.substring(0, 120) + (c.summary.length > 120 ? '...' : '') + '</div></div>').join('') + '</div>';
       }
     }
 
