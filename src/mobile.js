@@ -257,11 +257,11 @@ export const MOBILE_HTML = `<!DOCTYPE html>
     }
 
     function buildAliceContext() {
-      const projects = data?.projects?.map(p => '[' + p.id + '] ' + p.name + ' (' + (p.active ? 'ACTIVE' : 'inactive') + ')' + (p.status_notes ? ': ' + p.status_notes : '')).join('\\n') || 'None';
-      const tasks = data?.cleanTasks?.map(t => '[' + t.id + '] ' + t.text).join('\\n') || 'None';
-      const dump = data?.messyTasks?.map(t => '[' + t.id + '] ' + t.text).join('\\n') || 'None';
-      const checkins = data?.checkins?.map(c => '[' + c.id + '] ' + c.summary + (c.project_name ? ' (' + c.project_name + ')' : '')).join('\\n') || 'None';
-      return 'You are Alice, a friendly secretary who helps Micaiah think through his work. You have full access to edit the board.\\n\\nCURRENT BOARD STATE:\\n\\nPROJECTS:\\n' + projects + '\\n\\nTASKS:\\n' + tasks + '\\n\\nDUMP:\\n' + dump + '\\n\\nRECENT CHECKINS:\\n' + checkins + '\\n\\nPERSONALITY: Be warm but efficient. Keep responses to 1-3 sentences. No emojis. Brief confirmations only.';
+      const projects = data?.projects?.map(p => '[' + p.id + '] ' + p.name + ' (' + (p.active ? 'ACTIVE' : 'inactive') + ')' + (p.status_notes ? ': ' + p.status_notes : '')).join('\n') || 'None';
+      const tasks = data?.cleanTasks?.map(t => '[' + t.id + '] ' + t.text).join('\n') || 'None';
+      const dump = data?.messyTasks?.map(t => '[' + t.id + '] ' + t.text).join('\n') || 'None';
+      const checkins = data?.checkins?.map(c => '[' + c.id + '] ' + c.summary + (c.project_name ? ' (' + c.project_name + ')' : '')).join('\n') || 'None';
+      return 'You are Alice, a friendly secretary who helps Micaiah think through his work. You have full access to edit the board.\n\nCURRENT BOARD STATE:\n\nPROJECTS:\n' + projects + '\n\nTASKS:\n' + tasks + '\n\nDUMP:\n' + dump + '\n\nRECENT CHECKINS:\n' + checkins + '\n\nPERSONALITY: Be warm but efficient. Keep responses to 1-3 sentences. No emojis. Brief confirmations only.';
     }
 
     async function sendAlice() {
@@ -283,8 +283,8 @@ export const MOBILE_HTML = `<!DOCTYPE html>
             messages: aliceMessages.slice(1).map(m => ({ role: m.role, content: m.content }))
           })
         });
-        const data = await res.json();
-        const reply = data.content?.filter(c => c.type === 'text').map(c => c.text).join('\\n') || "Sorry, couldn't process that.";
+        const respData = await res.json();
+        const reply = respData.content?.filter(c => c.type === 'text').map(c => c.text).join('\n') || "Sorry, couldn't process that.";
         aliceMessages.push({ role: 'assistant', content: reply });
         loadData();
       } catch (e) {
@@ -338,7 +338,10 @@ export const MOBILE_HTML = `<!DOCTYPE html>
       }
       else if (activeTab === 'progress') {
         if (!data.checkins?.length) { content.innerHTML = '<div class="empty"><div class="empty-icon">📊</div>No checkins yet</div>'; return; }
-        content.innerHTML = '<div class="section"><div class="section-title">Progress <span class="count">' + data.checkins.length + '</span></div>' + data.checkins.map(c => '<div class="checkin-card" onclick=\'openCheckinModal(' + JSON.stringify(c).replace(/'/g, "\\'") + ')\'><div class="checkin-header"><div class="badge small">' + c.id + '</div><div class="checkin-time">' + timeAgo(c.created_at) + '</div>' + (c.project_name ? '<span class="checkin-project">' + c.project_name + '</span>' : '') + '</div><div class="checkin-summary">' + c.summary.substring(0, 120) + (c.summary.length > 120 ? '...' : '') + '</div></div>').join('') + '</div>';
+        content.innerHTML = '<div class="section"><div class="section-title">Progress <span class="count">' + data.checkins.length + '</span></div>' + data.checkins.map(c => {
+          const safeCheckin = JSON.stringify(c).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+          return '<div class="checkin-card" onclick="openCheckinModal(JSON.parse(decodeURIComponent(\'' + encodeURIComponent(JSON.stringify(c)) + '\')))"><div class="checkin-header"><div class="badge small">' + c.id + '</div><div class="checkin-time">' + timeAgo(c.created_at) + '</div>' + (c.project_name ? '<span class="checkin-project">' + c.project_name + '</span>' : '') + '</div><div class="checkin-summary">' + (c.summary.length > 120 ? c.summary.substring(0, 120) + '...' : c.summary) + '</div></div>';
+        }).join('') + '</div>';
       }
     }
 
