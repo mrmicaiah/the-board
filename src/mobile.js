@@ -5,7 +5,7 @@ export const MOBILE_HTML = `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Board">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -204,32 +204,34 @@ export const MOBILE_HTML = `<!DOCTYPE html>
     }
 
     function buildAliceContext() {
-      let projects = 'None';
-      let tasks = 'None';
-      let dump = 'None';
-      let checkins = 'None';
+      var NL = String.fromCharCode(10);
+      var projects = 'None';
+      var tasks = 'None';
+      var dump = 'None';
+      var checkins = 'None';
       
       if (data && data.projects && data.projects.length) {
         projects = data.projects.map(function(p) {
           return '[' + p.id + '] ' + p.name + ' (' + (p.active ? 'ACTIVE' : 'inactive') + ')' + (p.status_notes ? ': ' + p.status_notes : '');
-        }).join('\n');
+        }).join(NL);
       }
       if (data && data.cleanTasks && data.cleanTasks.length) {
-        tasks = data.cleanTasks.map(function(t) { return '[' + t.id + '] ' + t.text; }).join('\n');
+        tasks = data.cleanTasks.map(function(t) { return '[' + t.id + '] ' + t.text; }).join(NL);
       }
       if (data && data.messyTasks && data.messyTasks.length) {
-        dump = data.messyTasks.map(function(t) { return '[' + t.id + '] ' + t.text; }).join('\n');
+        dump = data.messyTasks.map(function(t) { return '[' + t.id + '] ' + t.text; }).join(NL);
       }
       if (data && data.checkins && data.checkins.length) {
-        checkins = data.checkins.map(function(c) { return '[' + c.id + '] ' + c.summary + (c.project_name ? ' (' + c.project_name + ')' : ''); }).join('\n');
+        checkins = data.checkins.map(function(c) { return '[' + c.id + '] ' + c.summary + (c.project_name ? ' (' + c.project_name + ')' : ''); }).join(NL);
       }
       
-      return 'You are Alice, a friendly secretary who helps Micaiah think through his work. You have full access to edit the board.\n\nCURRENT BOARD STATE:\n\nPROJECTS:\n' + projects + '\n\nTASKS:\n' + tasks + '\n\nDUMP:\n' + dump + '\n\nRECENT CHECKINS:\n' + checkins + '\n\nPERSONALITY: Be warm but efficient. Keep responses to 1-3 sentences. No emojis. Brief confirmations only.';
+      return 'You are Alice, a friendly secretary who helps Micaiah think through his work. You have full access to edit the board.' + NL + NL + 'CURRENT BOARD STATE:' + NL + NL + 'PROJECTS:' + NL + projects + NL + NL + 'TASKS:' + NL + tasks + NL + NL + 'DUMP:' + NL + dump + NL + NL + 'RECENT CHECKINS:' + NL + checkins + NL + NL + 'PERSONALITY: Be warm but efficient. Keep responses to 1-3 sentences. No emojis. Brief confirmations only.';
     }
 
     async function sendAlice() {
-      const input = document.getElementById('aliceInput');
-      const text = input.value.trim();
+      var NL = String.fromCharCode(10);
+      var input = document.getElementById('aliceInput');
+      var text = input.value.trim();
       if (!text || aliceLoading) return;
       
       input.value = '';
@@ -238,12 +240,12 @@ export const MOBILE_HTML = `<!DOCTYPE html>
       renderAliceMessages();
 
       try {
-        const apiMessages = [];
-        for (let i = 1; i < aliceMessages.length; i++) {
+        var apiMessages = [];
+        for (var i = 1; i < aliceMessages.length; i++) {
           apiMessages.push({ role: aliceMessages[i].role, content: aliceMessages[i].content });
         }
         
-        const res = await fetch('/api/alice', {
+        var res = await fetch('/api/alice', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -251,16 +253,16 @@ export const MOBILE_HTML = `<!DOCTYPE html>
             messages: apiMessages
           })
         });
-        const respData = await res.json();
-        let reply = "Sorry, couldn't process that.";
+        var respData = await res.json();
+        var reply = "Sorry, couldn't process that.";
         if (respData.content) {
-          const textParts = [];
-          for (let i = 0; i < respData.content.length; i++) {
-            if (respData.content[i].type === 'text') {
-              textParts.push(respData.content[i].text);
+          var textParts = [];
+          for (var j = 0; j < respData.content.length; j++) {
+            if (respData.content[j].type === 'text') {
+              textParts.push(respData.content[j].text);
             }
           }
-          if (textParts.length) reply = textParts.join('\n');
+          if (textParts.length) reply = textParts.join(NL);
         }
         aliceMessages.push({ role: 'assistant', content: reply });
         loadData();
@@ -273,7 +275,7 @@ export const MOBILE_HTML = `<!DOCTYPE html>
 
     async function loadData() {
       try {
-        const res = await fetch('/api/board');
+        var res = await fetch('/api/board');
         data = await res.json();
         render();
       } catch (e) {
@@ -290,7 +292,7 @@ export const MOBILE_HTML = `<!DOCTYPE html>
 
     function render() {
       if (!data) return;
-      const content = document.getElementById('content');
+      var content = document.getElementById('content');
 
       if (activeTab === 'projects') {
         if (!data.projects || !data.projects.length) { content.innerHTML = '<div class="empty"><div class="empty-icon">📁</div>No projects yet</div>'; return; }
@@ -313,8 +315,8 @@ export const MOBILE_HTML = `<!DOCTYPE html>
       else if (activeTab === 'notepads') {
         if (!data.notepads || !data.notepads.length) { content.innerHTML = '<div class="empty"><div class="empty-icon">📝</div>No notepads yet</div>'; return; }
         content.innerHTML = '<div class="section">' + data.notepads.map(function(n) {
-          const isPinned = data.pinnedNotepads && data.pinnedNotepads.indexOf(n.id) >= 0;
-          let itemsHtml = '';
+          var isPinned = data.pinnedNotepads && data.pinnedNotepads.indexOf(n.id) >= 0;
+          var itemsHtml = '';
           if (n.items && n.items.length) {
             itemsHtml = n.items.map(function(item) {
               return '<div class="notepad-item"><div class="notepad-check ' + (item.done ? 'done' : '') + '" onclick="toggleCheck(' + n.id + ', ' + item.id + ', ' + item.done + ')">' + (item.done ? '✓' : '') + '</div><div class="notepad-item-text ' + (item.done ? 'done' : '') + '">' + item.text + '</div></div>';
