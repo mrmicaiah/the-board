@@ -44,12 +44,24 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
       return date.toLocaleDateString();
     };
 
+    // Check if mobile
+    const useIsMobile = () => {
+      const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+      useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+      }, []);
+      return isMobile;
+    };
+
     // Alice Chat Panel
     const AliceChat = ({ boardData, isOpen, onToggle }) => {
       const [messages, setMessages] = useState([{ role: 'assistant', content: "Hey. What do you need?" }]);
       const [input, setInput] = useState('');
       const [loading, setLoading] = useState(false);
       const messagesEndRef = useRef(null);
+      const isMobile = useIsMobile();
 
       const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -148,8 +160,13 @@ PERSONALITY & GUARDRAILS:
       if (!isOpen) {
         return (
           <button onClick={onToggle} style={{
-            position: 'fixed', left: 24, top: '50%', transform: 'translateY(-50%)',
-            width: 56, height: 56, borderRadius: '50%',
+            position: 'fixed', 
+            left: isMobile ? 16 : 24, 
+            top: '50%', 
+            transform: 'translateY(-50%)',
+            width: isMobile ? 48 : 56, 
+            height: isMobile ? 48 : 56, 
+            borderRadius: '50%',
             background: '#FFD60A',
             border: '3px solid #1a1a1a',
             padding: 0, cursor: 'pointer',
@@ -162,63 +179,92 @@ PERSONALITY & GUARDRAILS:
         );
       }
 
+      // Mobile: full screen panel
+      // Desktop: side panel
+      const panelStyle = isMobile ? {
+        position: 'fixed', 
+        left: 0, 
+        top: 0, 
+        right: 0,
+        bottom: 0,
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#fef9c3',
+        borderRadius: 0, 
+        border: 'none',
+        boxShadow: 'none',
+        display: 'flex', 
+        flexDirection: 'column', 
+        overflow: 'hidden',
+        zIndex: 300
+      } : {
+        position: 'fixed', 
+        left: 24, 
+        top: 24, 
+        bottom: 24,
+        width: 320, 
+        backgroundColor: '#fef9c3',
+        borderRadius: 8, 
+        border: '3px solid #1a1a1a',
+        boxShadow: '6px 6px 0 rgba(0,0,0,0.2)',
+        display: 'flex', 
+        flexDirection: 'column', 
+        overflow: 'hidden',
+        zIndex: 200
+      };
+
       return (
-        <div style={{
-          position: 'fixed', left: 24, top: 24, bottom: 24,
-          width: 320, backgroundColor: '#fef9c3',
-          borderRadius: 8, border: '3px solid #1a1a1a',
-          boxShadow: '6px 6px 0 rgba(0,0,0,0.2)',
-          display: 'flex', flexDirection: 'column', overflow: 'hidden',
-          zIndex: 200
-        }}>
+        <div style={panelStyle}>
           <div style={{
-            padding: '14px 16px', backgroundColor: '#FFD60A',
+            padding: isMobile ? '16px 20px' : '14px 16px', 
+            backgroundColor: '#FFD60A',
             borderBottom: '3px solid #1a1a1a',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            flexShrink: 0
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ width: 40, height: 40, borderRadius: '50%', border: '2px solid #1a1a1a', overflow: 'hidden', flexShrink: 0 }}>
                 <img src={ALICE_IMAGE} alt="Alice" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
-              <span style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 20, color: '#1a1a1a' }}>Alice</span>
+              <span style={{ fontFamily: "'Permanent Marker', cursive", fontSize: isMobile ? 24 : 20, color: '#1a1a1a' }}>Alice</span>
             </div>
-            <button onClick={onToggle} style={{ background: 'none', border: 'none', color: '#1a1a1a', fontSize: 22, cursor: 'pointer', fontFamily: "'Permanent Marker', cursive" }}>✕</button>
+            <button onClick={onToggle} style={{ background: 'none', border: 'none', color: '#1a1a1a', fontSize: isMobile ? 28 : 22, cursor: 'pointer', fontFamily: "'Permanent Marker', cursive", padding: '4px 8px' }}>✕</button>
           </div>
           
-          <div style={{ flex: 1, overflow: 'auto', padding: 14, display: 'flex', flexDirection: 'column', gap: 10, backgroundColor: '#fef9c3' }}>
+          <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? 16 : 14, display: 'flex', flexDirection: 'column', gap: 10, backgroundColor: '#fef9c3' }}>
             {messages.map((msg, i) => (
               <div key={i} style={{
                 alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                maxWidth: '85%', padding: '10px 14px', borderRadius: 4,
+                maxWidth: '85%', padding: isMobile ? '12px 16px' : '10px 14px', borderRadius: 4,
                 backgroundColor: msg.role === 'user' ? '#1a1a1a' : '#fff',
                 color: msg.role === 'user' ? '#FFD60A' : '#1a1a1a',
                 border: msg.role === 'user' ? 'none' : '2px solid #1a1a1a',
-                fontFamily: "'Architects Daughter', cursive", fontSize: 15, lineHeight: 1.4,
+                fontFamily: "'Architects Daughter', cursive", fontSize: isMobile ? 17 : 15, lineHeight: 1.4,
                 boxShadow: '2px 2px 0 rgba(0,0,0,0.15)'
               }}>{msg.content}</div>
             ))}
             {loading && (
-              <div style={{ alignSelf: 'flex-start', padding: '10px 14px', borderRadius: 4, backgroundColor: '#fff', border: '2px solid #1a1a1a', color: '#6b7280', fontFamily: "'Architects Daughter', cursive", fontStyle: 'italic' }}>typing...</div>
+              <div style={{ alignSelf: 'flex-start', padding: isMobile ? '12px 16px' : '10px 14px', borderRadius: 4, backgroundColor: '#fff', border: '2px solid #1a1a1a', color: '#6b7280', fontFamily: "'Architects Daughter', cursive", fontStyle: 'italic' }}>typing...</div>
             )}
             <div ref={messagesEndRef} />
           </div>
           
-          <div style={{ padding: 12, borderTop: '3px solid #1a1a1a', backgroundColor: '#FFD60A', display: 'flex', gap: 8 }}>
+          <div style={{ padding: isMobile ? 16 : 12, borderTop: '3px solid #1a1a1a', backgroundColor: '#FFD60A', display: 'flex', gap: 8, flexShrink: 0 }}>
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
               placeholder="Talk to Alice..."
               style={{
-                flex: 1, padding: '10px 14px', borderRadius: 4, border: '2px solid #1a1a1a',
-                fontFamily: "'Architects Daughter', cursive", fontSize: 15, outline: 'none',
+                flex: 1, padding: isMobile ? '14px 16px' : '10px 14px', borderRadius: 4, border: '2px solid #1a1a1a',
+                fontFamily: "'Architects Daughter', cursive", fontSize: isMobile ? 17 : 15, outline: 'none',
                 backgroundColor: '#fff'
               }}
             />
             <button onClick={sendMessage} disabled={loading} style={{
-              padding: '10px 16px', borderRadius: 4, border: '2px solid #1a1a1a',
+              padding: isMobile ? '14px 20px' : '10px 16px', borderRadius: 4, border: '2px solid #1a1a1a',
               backgroundColor: '#1a1a1a',
-              color: '#FFD60A', fontFamily: "'Permanent Marker', cursive", fontSize: 14, cursor: 'pointer',
+              color: '#FFD60A', fontFamily: "'Permanent Marker', cursive", fontSize: isMobile ? 16 : 14, cursor: 'pointer',
               boxShadow: '2px 2px 0 rgba(0,0,0,0.2)'
             }}>Send</button>
           </div>
