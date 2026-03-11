@@ -6,6 +6,25 @@ import { FRONTEND_HTML } from './frontend.js';
 import { MOBILE_HTML } from './mobile.js';
 import { APP_ICON } from './icon.js';
 
+// PWA Manifest for iOS Add to Home Screen
+const MANIFEST = {
+  name: "The Board",
+  short_name: "The Board",
+  description: "Personal productivity dashboard",
+  start_url: "/",
+  display: "standalone",
+  background_color: "#f5f5f0",
+  theme_color: "#1a1a1a",
+  orientation: "any",
+  icons: [
+    { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
+    { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
+    { src: "/icon-180.png", sizes: "180x180", type: "image/png" },
+    { src: "/icon-167.png", sizes: "167x167", type: "image/png" },
+    { src: "/icon-152.png", sizes: "152x152", type: "image/png" }
+  ]
+};
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -23,8 +42,18 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
-    // App icon
-    if (path === '/icon.png' || path === '/apple-touch-icon.png') {
+    // PWA Manifest
+    if (path === '/manifest.json') {
+      return new Response(JSON.stringify(MANIFEST), {
+        headers: { 
+          'Content-Type': 'application/manifest+json',
+          'Cache-Control': 'public, max-age=86400'
+        },
+      });
+    }
+
+    // App icons (all sizes use the same base icon, scaled by iOS)
+    if (path.match(/^\/icon(-\d+)?\.png$/) || path === '/apple-touch-icon.png' || path === '/apple-touch-icon-precomposed.png') {
       const binaryData = Uint8Array.from(atob(APP_ICON), c => c.charCodeAt(0));
       return new Response(binaryData, {
         headers: { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=31536000' },

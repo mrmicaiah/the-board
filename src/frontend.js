@@ -4,8 +4,33 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>The Board</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="application-name" content="The Board">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="The Board">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#1a1a1a">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/icon-180.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/icon-152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="/icon-167.png">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/icon-16.png">
+  
+  <!-- Splash Screens for iOS -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
@@ -20,6 +45,15 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
     @keyframes pulse { 0%, 100% { box-shadow: 0 0 20px #22c55e; } 50% { box-shadow: 0 0 30px #22c55e, 0 0 40px #22c55e; } }
     .item-enter { animation: fadeIn 0.3s ease-out; }
     .light-active { animation: pulse 2s ease-in-out infinite; }
+    /* iOS safe area padding */
+    @supports (padding: env(safe-area-inset-top)) {
+      body { 
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+      }
+    }
   </style>
 </head>
 <body>
@@ -601,63 +635,4 @@ PERSONALITY & GUARDRAILS:
                 </div>
                 <div style={{ fontFamily: "'Caveat', cursive", fontSize: 28, color: '#1a1a1a', lineHeight: 1.4, marginBottom: 24, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{expandedTask.text}</div>
                 <div style={{ display: 'flex', gap: 12 }}>
-                  <button onClick={() => copyToClipboard(expandedTask.text)} style={{ padding: '12px 24px', backgroundColor: '#1a1a2e', color: 'white', border: 'none', borderRadius: 6, fontFamily: "'Permanent Marker', cursive", fontSize: 16, cursor: 'pointer' }}>📋 Copy</button>
-                  <button onClick={() => setExpandedTask(null)} style={{ padding: '12px 24px', backgroundColor: 'transparent', color: '#1a1a1a', border: '2px solid #1a1a1a', borderRadius: 6, fontFamily: "'Permanent Marker', cursive", fontSize: 16, cursor: 'pointer' }}>Close</button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Expanded checkin modal */}
-          {expandedCheckin && (
-            <div onClick={() => setExpandedCheckin(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 40 }}>
-              <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: 'white', padding: 32, borderRadius: 8, boxShadow: '8px 8px 24px rgba(0,0,0,0.4)', maxWidth: 600, width: '100%', maxHeight: 'calc(100vh - 80px)', overflow: 'auto' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
-                  <NumberBadge number={expandedCheckin.id} size="normal" />
-                  <span style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 20, color: '#6b7280' }}>CHECKIN</span>
-                  <span style={{ fontFamily: "'Architects Daughter', cursive", fontSize: 14, color: '#9ca3af', marginLeft: 'auto' }}>
-                    {timeAgo(expandedCheckin.created_at)}
-                  </span>
-                </div>
-                {expandedCheckin.project_name && (
-                  <div style={{ marginBottom: 16 }}>
-                    <span style={{
-                      backgroundColor: '#FFD60A', padding: '4px 10px', borderRadius: 4,
-                      fontFamily: "'Architects Daughter', cursive", fontSize: 14, color: '#1a1a1a',
-                      border: '2px solid #1a1a1a'
-                    }}>{expandedCheckin.project_name}</span>
-                  </div>
-                )}
-                <div style={{ fontFamily: "'Architects Daughter', cursive", fontSize: 22, color: '#1a1a1a', lineHeight: 1.5, marginBottom: 24, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{expandedCheckin.summary}</div>
-                {expandedCheckin.details && (
-                  <div style={{ fontFamily: "'Architects Daughter', cursive", fontSize: 16, color: '#4b5563', lineHeight: 1.5, marginBottom: 24, whiteSpace: 'pre-wrap', wordBreak: 'break-word', padding: 16, backgroundColor: '#f3f4f6', borderRadius: 6 }}>{expandedCheckin.details}</div>
-                )}
-                <div style={{ display: 'flex', gap: 12 }}>
-                  <button onClick={() => copyToClipboard(expandedCheckin.summary)} style={{ padding: '12px 24px', backgroundColor: '#1a1a2e', color: 'white', border: 'none', borderRadius: 6, fontFamily: "'Permanent Marker', cursive", fontSize: 16, cursor: 'pointer' }}>📋 Copy</button>
-                  <button onClick={() => setExpandedCheckin(null)} style={{ padding: '12px 24px', backgroundColor: 'transparent', color: '#1a1a1a', border: '2px solid #1a1a1a', borderRadius: 6, fontFamily: "'Permanent Marker', cursive", fontSize: 16, cursor: 'pointer' }}>Close</button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Confirm delete modal */}
-          {confirmDelete && (
-            <div onClick={() => setConfirmDelete(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 40 }}>
-              <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: 'white', padding: 32, borderRadius: 12, boxShadow: '8px 8px 24px rgba(0,0,0,0.4)', maxWidth: 400, width: '100%', textAlign: 'center' }}>
-                <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 24, marginBottom: 16, color: '#ef4444' }}>Delete Task?</div>
-                <div style={{ fontFamily: "'Architects Daughter', cursive", fontSize: 18, color: '#4b5563', marginBottom: 24, lineHeight: 1.4 }}>"{confirmDelete.text}"</div>
-                <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-                  <button onClick={() => setConfirmDelete(null)} style={{ padding: '12px 24px', backgroundColor: 'transparent', color: '#1a1a1a', border: '2px solid #d1d5db', borderRadius: 6, fontFamily: "'Permanent Marker', cursive", fontSize: 16, cursor: 'pointer' }}>Cancel</button>
-                  <button onClick={() => { deleteItem(confirmDelete.id); setConfirmDelete(null); }} style={{ padding: '12px 24px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: 6, fontFamily: "'Permanent Marker', cursive", fontSize: 16, cursor: 'pointer' }}>Delete</button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    };
-
-    ReactDOM.render(<Whiteboard />, document.getElementById('root'));
-  </script>
-</body>
-</html>`;
+                  <button onClick={() => copyToClipboard(expandedTask.text)} style={{ padding: '12px 24px', backgroundColor: '#1a1a2e', color: 'white', border: 'none', borderRadius: 6, fontFamily: "'Permanent
