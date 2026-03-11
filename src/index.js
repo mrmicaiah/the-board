@@ -4,7 +4,9 @@
 import { handleAPI } from './api.js';
 import { FRONTEND_HTML } from './frontend.js';
 import { MOBILE_HTML } from './mobile.js';
-import { APP_ICON } from './icon.js';
+
+// Alice's profile pic as the app icon
+const ALICE_ICON_URL = 'https://res.cloudinary.com/dxzw1zwez/image/upload/w_512,h_512,c_fill,g_face/v1772644026/alice_profile_kpamkm.jpg';
 
 // PWA Manifest for iOS Add to Home Screen
 const MANIFEST = {
@@ -17,11 +19,11 @@ const MANIFEST = {
   theme_color: "#1a1a1a",
   orientation: "any",
   icons: [
-    { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
-    { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
-    { src: "/icon-180.png", sizes: "180x180", type: "image/png" },
-    { src: "/icon-167.png", sizes: "167x167", type: "image/png" },
-    { src: "/icon-152.png", sizes: "152x152", type: "image/png" }
+    { src: "/icon-192.png", sizes: "192x192", type: "image/jpeg", purpose: "any maskable" },
+    { src: "/icon-512.png", sizes: "512x512", type: "image/jpeg", purpose: "any maskable" },
+    { src: "/icon-180.png", sizes: "180x180", type: "image/jpeg" },
+    { src: "/icon-167.png", sizes: "167x167", type: "image/jpeg" },
+    { src: "/icon-152.png", sizes: "152x152", type: "image/jpeg" }
   ]
 };
 
@@ -52,12 +54,16 @@ export default {
       });
     }
 
-    // App icons (all sizes use the same base icon, scaled by iOS)
+    // App icons - redirect to Alice's Cloudinary image with appropriate size
     if (path.match(/^\/icon(-\d+)?\.png$/) || path === '/apple-touch-icon.png' || path === '/apple-touch-icon-precomposed.png') {
-      const binaryData = Uint8Array.from(atob(APP_ICON), c => c.charCodeAt(0));
-      return new Response(binaryData, {
-        headers: { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=31536000' },
-      });
+      // Extract size from path if present, default to 180
+      const sizeMatch = path.match(/icon-(\d+)/);
+      const size = sizeMatch ? sizeMatch[1] : '180';
+      
+      // Redirect to Cloudinary with proper sizing
+      const iconUrl = `https://res.cloudinary.com/dxzw1zwez/image/upload/w_${size},h_${size},c_fill,g_face/v1772644026/alice_profile_kpamkm.jpg`;
+      
+      return Response.redirect(iconUrl, 302);
     }
 
     // Mobile view
