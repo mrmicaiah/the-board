@@ -45,6 +45,8 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
     @keyframes pulse { 0%, 100% { box-shadow: 0 0 20px #22c55e; } 50% { box-shadow: 0 0 30px #22c55e, 0 0 40px #22c55e; } }
     .item-enter { animation: fadeIn 0.3s ease-out; }
     .light-active { animation: pulse 2s ease-in-out infinite; }
+    .pin-btn { transition: all 0.15s ease; }
+    .pin-btn:hover { transform: scale(1.15); }
     /* iOS safe area padding */
     @supports (padding: env(safe-area-inset-top)) {
       body { 
@@ -336,43 +338,83 @@ PERSONALITY & GUARDRAILS:
       </div>
     );
 
-    // Notepad list card (for sidebar)
-    const NotepadListCard = ({ notepad, isPinned, onPin }) => (
-      <div className="item-enter" style={{
-        backgroundColor: isPinned ? '#fef9c3' : 'rgba(255,255,255,0.9)', 
-        border: isPinned ? '2px solid #d4a017' : '2px solid #9ca3af',
-        borderRadius: 6, padding: '10px 12px',
-        boxShadow: '2px 2px 0 rgba(0,0,0,0.1)', flexShrink: 0,
-        cursor: 'pointer', transition: 'all 0.15s',
-      }} onClick={() => onPin(notepad.id, isPinned)}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-          <NumberBadge number={notepad.id} size="tiny" />
-          <span style={{
-            fontFamily: "'Permanent Marker', cursive", fontSize: 14,
-            color: '#1a1a1a', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
-          }}>{notepad.title}</span>
-          {isPinned && (
-            <span style={{ fontSize: 12, color: '#d4a017' }}>📌</span>
-          )}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{
-            fontFamily: "'Architects Daughter', cursive", fontSize: 12,
-            color: '#6b7280'
-          }}>
-            {notepad.items?.length || 0} items
-          </span>
-          {notepad.items?.length > 0 && (
-            <span style={{
-              fontFamily: "'Architects Daughter', cursive", fontSize: 11,
-              color: '#9ca3af'
-            }}>
-              ({notepad.items.filter(i => i.done).length} done)
-            </span>
-          )}
-        </div>
-      </div>
+    // Pin button component
+    const PinButton = ({ isPinned, onToggle, disabled }) => (
+      <button
+        className="pin-btn"
+        onClick={(e) => { e.stopPropagation(); onToggle(); }}
+        disabled={disabled}
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: 4,
+          border: isPinned ? '2px solid #d4a017' : '2px solid #9ca3af',
+          backgroundColor: isPinned ? '#fef9c3' : 'rgba(255,255,255,0.8)',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 14,
+          opacity: disabled ? 0.5 : 1,
+          flexShrink: 0,
+          boxShadow: isPinned ? '0 0 8px rgba(212, 160, 23, 0.4)' : 'none'
+        }}
+        title={isPinned ? 'Unpin notepad' : (disabled ? 'Max 3 pinned' : 'Pin notepad')}
+      >
+        <span style={{ 
+          transform: isPinned ? 'rotate(0deg)' : 'rotate(45deg)',
+          transition: 'transform 0.15s ease',
+          color: isPinned ? '#d4a017' : '#9ca3af'
+        }}>
+          📌
+        </span>
+      </button>
     );
+
+    // Notepad list card (for sidebar)
+    const NotepadListCard = ({ notepad, isPinned, onPin, pinnedCount }) => {
+      const canPin = pinnedCount < 3 || isPinned;
+      
+      return (
+        <div className="item-enter" style={{
+          backgroundColor: isPinned ? '#fef9c3' : 'rgba(255,255,255,0.9)', 
+          border: isPinned ? '2px solid #d4a017' : '2px solid #9ca3af',
+          borderRadius: 6, padding: '10px 12px',
+          boxShadow: isPinned ? '2px 2px 0 rgba(212, 160, 23, 0.3)' : '2px 2px 0 rgba(0,0,0,0.1)', 
+          flexShrink: 0,
+          transition: 'all 0.15s',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <NumberBadge number={notepad.id} size="tiny" />
+            <span style={{
+              fontFamily: "'Permanent Marker', cursive", fontSize: 14,
+              color: '#1a1a1a', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+            }}>{notepad.title}</span>
+            <PinButton 
+              isPinned={isPinned} 
+              onToggle={() => onPin(notepad.id, isPinned)}
+              disabled={!canPin}
+            />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 30 }}>
+            <span style={{
+              fontFamily: "'Architects Daughter', cursive", fontSize: 12,
+              color: '#6b7280'
+            }}>
+              {notepad.items?.length || 0} items
+            </span>
+            {notepad.items?.length > 0 && (
+              <span style={{
+                fontFamily: "'Architects Daughter', cursive", fontSize: 11,
+                color: '#9ca3af'
+              }}>
+                ({notepad.items.filter(i => i.done).length} done)
+              </span>
+            )}
+          </div>
+        </div>
+      );
+    };
 
     // Number badge
     const NumberBadge = ({ number, size = 'normal' }) => {
@@ -520,7 +562,7 @@ PERSONALITY & GUARDRAILS:
     };
 
     // Notepad overlay
-    const Notepad = ({ notepad, style }) => (
+    const Notepad = ({ notepad, style, onUnpin }) => (
       <div style={{
         backgroundColor: '#fef9c3', borderRadius: 4,
         boxShadow: '6px 6px 20px rgba(0,0,0,0.35), 0 0 0 2px #d4a017',
@@ -529,9 +571,36 @@ PERSONALITY & GUARDRAILS:
         <div style={{ position: 'absolute', left: 48, top: 0, bottom: 0, width: 2, backgroundColor: '#f87171', zIndex: 1 }} />
         <div style={{ position: 'absolute', top: -8, left: '30%', width: 60, height: 24, backgroundColor: 'rgba(200, 180, 150, 0.6)', transform: 'rotate(-2deg)', borderRadius: 2, zIndex: 2 }} />
         <div style={{ position: 'absolute', top: -6, right: '25%', width: 50, height: 22, backgroundColor: 'rgba(200, 180, 150, 0.5)', transform: 'rotate(3deg)', borderRadius: 2, zIndex: 2 }} />
+        
+        {/* Unpin button on notepad overlay */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onUnpin(notepad.id); }}
+          className="pin-btn"
+          style={{
+            position: 'absolute',
+            top: 12,
+            right: 12,
+            width: 36,
+            height: 36,
+            borderRadius: 6,
+            border: '2px solid #d4a017',
+            backgroundColor: '#fff',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 18,
+            zIndex: 10,
+            boxShadow: '2px 2px 4px rgba(0,0,0,0.2)'
+          }}
+          title="Unpin notepad"
+        >
+          📌
+        </button>
+        
         <div style={{ padding: '20px 20px 16px 60px', borderBottom: '2px solid #d4a017', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, position: 'relative', zIndex: 1 }}>
           <NumberBadge number={notepad.id} />
-          <h3 style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 26, color: '#1a1a1a', textDecoration: 'underline', textUnderlineOffset: 4 }}>{notepad.title}</h3>
+          <h3 style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 26, color: '#1a1a1a', textDecoration: 'underline', textUnderlineOffset: 4, paddingRight: 40 }}>{notepad.title}</h3>
         </div>
         <div style={{ padding: '16px 20px 20px 60px', display: 'flex', flexDirection: 'column', gap: 12, flex: 1, overflow: 'auto', position: 'relative', zIndex: 1 }}>
           {notepad.items?.map((item) => (
@@ -599,6 +668,7 @@ PERSONALITY & GUARDRAILS:
       }
 
       const pinnedNotepads = data.notepads?.filter(n => data.pinnedNotepads?.includes(n.id)) || [];
+      const pinnedCount = pinnedNotepads.length;
       const notepadCount = pinnedNotepads.length;
       const projectScale = Math.max(0.5, 1 - ((data.projects?.length || 1) - 1) * 0.1);
       const cleanTaskScale = Math.max(0.5, 1 - ((data.cleanTasks?.length || 1) - 1) * 0.06);
@@ -653,7 +723,12 @@ PERSONALITY & GUARDRAILS:
 
               {/* Notepads List column (replaces Progress) */}
               <div style={{ width: 220, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
-                <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 22, color: '#6b7280', paddingLeft: 4, opacity: 0.7, flexShrink: 0 }}>NOTEPADS</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 22, color: '#6b7280', paddingLeft: 4, opacity: 0.7, flexShrink: 0 }}>NOTEPADS</div>
+                  <span style={{ fontFamily: "'Architects Daughter', cursive", fontSize: 12, color: '#9ca3af' }}>
+                    ({pinnedCount}/3 pinned)
+                  </span>
+                </div>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflow: 'auto', paddingRight: 4 }}>
                   {data.notepads?.length > 0 ? (
                     data.notepads.map(notepad => (
@@ -662,6 +737,7 @@ PERSONALITY & GUARDRAILS:
                         notepad={notepad} 
                         isPinned={data.pinnedNotepads?.includes(notepad.id)}
                         onPin={toggleNotepadPin}
+                        pinnedCount={pinnedCount}
                       />
                     ))
                   ) : (
@@ -676,12 +752,17 @@ PERSONALITY & GUARDRAILS:
           {notepadCount > 0 && (
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 32, padding: 40, zIndex: 100 }}>
               {pinnedNotepads.map((notepad, index) => (
-                <Notepad key={notepad.id} notepad={notepad} style={{
-                  width: notepadCount === 1 ? 450 : notepadCount === 2 ? 400 : 350,
-                  maxHeight: 'calc(100vh - 80px)',
-                  overflow: 'hidden',
-                  transform: notepadCount === 3 ? \`rotate(\${(index - 1) * 2}deg)\` : notepadCount === 2 ? \`rotate(\${(index - 0.5) * 3}deg)\` : 'rotate(-1deg)'
-                }} />
+                <Notepad 
+                  key={notepad.id} 
+                  notepad={notepad} 
+                  onUnpin={(id) => toggleNotepadPin(id, true)}
+                  style={{
+                    width: notepadCount === 1 ? 450 : notepadCount === 2 ? 400 : 350,
+                    maxHeight: 'calc(100vh - 80px)',
+                    overflow: 'hidden',
+                    transform: notepadCount === 3 ? \`rotate(\${(index - 1) * 2}deg)\` : notepadCount === 2 ? \`rotate(\${(index - 0.5) * 3}deg)\` : 'rotate(-1deg)'
+                  }} 
+                />
               ))}
             </div>
           )}
