@@ -106,17 +106,17 @@ export const FRONTEND_HTML = `<!DOCTYPE html>
       }, [messages]);
 
       const buildContext = () => {
-        const projects = boardData?.projects?.map(p => \`[\${p.id}] \${p.name} (\${p.active ? 'ACTIVE' : 'inactive'})\${p.status_notes ? ': ' + p.status_notes : ''}\`).join('\\n') || 'None';
-        const tasks = boardData?.cleanTasks?.map(t => \`[\${t.id}] \${t.text}\`).join('\\n') || 'None';
-        const dump = boardData?.messyTasks?.map(t => \`[\${t.id}] \${t.text}\`).join('\\n') || 'None';
+        const projects = boardData?.projects?.map(p => \`[\${p.id}] \${p.name} (\${p.active ? 'ACTIVE' : 'inactive'})\${p.status_notes ? ': ' + p.status_notes : ''}\`).join(String.fromCharCode(10)) || 'None';
+        const tasks = boardData?.cleanTasks?.map(t => \`[\${t.id}] \${t.text}\`).join(String.fromCharCode(10)) || 'None';
+        const dump = boardData?.messyTasks?.map(t => \`[\${t.id}] \${t.text}\`).join(String.fromCharCode(10)) || 'None';
         
         const notepads = boardData?.notepads?.map(n => {
-          const items = n.items?.map(i => \`  [\${i.id}] \${i.done ? '[x]' : '[ ]'} \${i.text}\`).join('\\n') || '  (empty)';
+          const items = n.items?.map(i => \`  [\${i.id}] \${i.done ? '[x]' : '[ ]'} \${i.text}\`).join(String.fromCharCode(10)) || '  (empty)';
           const pinned = boardData?.pinnedNotepads?.includes(n.id) ? ' (PINNED)' : '';
-          return \`[\${n.id}] \${n.title}\${pinned}\\n\${items}\`;
-        }).join('\\n\\n') || 'None';
+          return \`[\${n.id}] \${n.title}\${pinned}\${String.fromCharCode(10)}\${items}\`;
+        }).join(String.fromCharCode(10) + String.fromCharCode(10)) || 'None';
         
-        const checkins = boardData?.checkins?.map(c => \`[\${c.id}] \${c.summary}\${c.project_name ? ' (' + c.project_name + ')' : ''}\`).join('\\n') || 'None';
+        const checkins = boardData?.checkins?.map(c => \`[\${c.id}] \${c.summary}\${c.project_name ? ' (' + c.project_name + ')' : ''}\`).join(String.fromCharCode(10)) || 'None';
         
         const pinnedIds = boardData?.pinnedNotepads?.join(', ') || 'None';
         
@@ -182,7 +182,7 @@ PERSONALITY & GUARDRAILS:
           });
 
           const data = await response.json();
-          const textContent = data.content?.filter(c => c.type === 'text').map(c => c.text).join('\\n') || "Sorry, I couldn't process that.";
+          const textContent = data.content?.filter(c => c.type === 'text').map(c => c.text).join(String.fromCharCode(10)) || "Sorry, I couldn't process that.";
           const assistantMessage = { role: 'assistant', content: textContent };
           setMessages(prev => [...prev, assistantMessage]);
         } catch (error) {
@@ -306,7 +306,7 @@ PERSONALITY & GUARDRAILS:
       );
     };
 
-    // Checkin card (clickable)
+    // Checkin card (clickable) - KEPT FOR FUTURE USE
     const CheckinCard = ({ checkin, onExpand }) => (
       <div className="item-enter" onClick={() => onExpand(checkin)} style={{
         backgroundColor: 'rgba(255,255,255,0.9)', border: '2px solid #9ca3af',
@@ -333,6 +333,44 @@ PERSONALITY & GUARDRAILS:
           overflow: 'hidden', display: '-webkit-box',
           WebkitLineClamp: 3, WebkitBoxOrient: 'vertical'
         }}>{checkin.summary}</p>
+      </div>
+    );
+
+    // Notepad list card (for sidebar)
+    const NotepadListCard = ({ notepad, isPinned, onPin }) => (
+      <div className="item-enter" style={{
+        backgroundColor: isPinned ? '#fef9c3' : 'rgba(255,255,255,0.9)', 
+        border: isPinned ? '2px solid #d4a017' : '2px solid #9ca3af',
+        borderRadius: 6, padding: '10px 12px',
+        boxShadow: '2px 2px 0 rgba(0,0,0,0.1)', flexShrink: 0,
+        cursor: 'pointer', transition: 'all 0.15s',
+      }} onClick={() => onPin(notepad.id, isPinned)}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+          <NumberBadge number={notepad.id} size="tiny" />
+          <span style={{
+            fontFamily: "'Permanent Marker', cursive", fontSize: 14,
+            color: '#1a1a1a', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+          }}>{notepad.title}</span>
+          {isPinned && (
+            <span style={{ fontSize: 12, color: '#d4a017' }}>📌</span>
+          )}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{
+            fontFamily: "'Architects Daughter', cursive", fontSize: 12,
+            color: '#6b7280'
+          }}>
+            {notepad.items?.length || 0} items
+          </span>
+          {notepad.items?.length > 0 && (
+            <span style={{
+              fontFamily: "'Architects Daughter', cursive", fontSize: 11,
+              color: '#9ca3af'
+            }}>
+              ({notepad.items.filter(i => i.done).length} done)
+            </span>
+          )}
+        </div>
       </div>
     );
 
@@ -538,6 +576,12 @@ PERSONALITY & GUARDRAILS:
         fetchBoard();
       };
 
+      const toggleNotepadPin = async (notepadId, isPinned) => {
+        const endpoint = isPinned ? 'unpin' : 'pin';
+        await fetch(API_BASE + '/api/notepads/' + notepadId + '/' + endpoint, { method: 'POST' });
+        fetchBoard();
+      };
+
       const copyToClipboard = (text) => navigator.clipboard.writeText(text);
 
       useEffect(() => {
@@ -594,7 +638,7 @@ PERSONALITY & GUARDRAILS:
                 </div>
               </div>
 
-              {/* Progress column */}
+              {/* COMMENTED OUT: Progress column
               <div style={{ width: 220, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
                 <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 22, color: '#6b7280', paddingLeft: 4, opacity: 0.7, flexShrink: 0 }}>PROGRESS</div>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflow: 'auto', paddingRight: 4 }}>
@@ -602,6 +646,26 @@ PERSONALITY & GUARDRAILS:
                     data.checkins.map(checkin => <CheckinCard key={checkin.id} checkin={checkin} onExpand={setExpandedCheckin} />)
                   ) : (
                     <div style={{ fontFamily: "'Architects Daughter', cursive", fontSize: 14, color: '#9ca3af', textAlign: 'center', padding: 20 }}>No checkins yet</div>
+                  )}
+                </div>
+              </div>
+              */}
+
+              {/* Notepads List column (replaces Progress) */}
+              <div style={{ width: 220, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
+                <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 22, color: '#6b7280', paddingLeft: 4, opacity: 0.7, flexShrink: 0 }}>NOTEPADS</div>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflow: 'auto', paddingRight: 4 }}>
+                  {data.notepads?.length > 0 ? (
+                    data.notepads.map(notepad => (
+                      <NotepadListCard 
+                        key={notepad.id} 
+                        notepad={notepad} 
+                        isPinned={data.pinnedNotepads?.includes(notepad.id)}
+                        onPin={toggleNotepadPin}
+                      />
+                    ))
+                  ) : (
+                    <div style={{ fontFamily: "'Architects Daughter', cursive", fontSize: 14, color: '#9ca3af', textAlign: 'center', padding: 20 }}>No notepads yet</div>
                   )}
                 </div>
               </div>
@@ -635,4 +699,51 @@ PERSONALITY & GUARDRAILS:
                 </div>
                 <div style={{ fontFamily: "'Caveat', cursive", fontSize: 28, color: '#1a1a1a', lineHeight: 1.4, marginBottom: 24, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{expandedTask.text}</div>
                 <div style={{ display: 'flex', gap: 12 }}>
-                  <button onClick={() => copyToClipboard(expandedTask.text)} style={{ padding: '12px 24px', backgroundColor: '#1a1a2e', color: 'white', border: 'none', borderRadius: 6, fontFamily: "'Permanent
+                  <button onClick={() => copyToClipboard(expandedTask.text)} style={{ padding: '12px 24px', backgroundColor: '#1a1a2e', color: 'white', border: 'none', borderRadius: 6, fontFamily: "'Permanent Marker', cursive", fontSize: 16, cursor: 'pointer' }}>Copy</button>
+                  <button onClick={() => { deleteItem(expandedTask.id); setExpandedTask(null); }} style={{ padding: '12px 24px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: 6, fontFamily: "'Permanent Marker', cursive", fontSize: 16, cursor: 'pointer' }}>Delete</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Confirm delete modal */}
+          {confirmDelete && (
+            <div onClick={() => setConfirmDelete(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 40 }}>
+              <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: 'white', padding: 32, borderRadius: 8, boxShadow: '8px 8px 24px rgba(0,0,0,0.4)', maxWidth: 400, width: '100%' }}>
+                <h3 style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 24, color: '#1a1a1a', marginBottom: 16 }}>Delete Task?</h3>
+                <p style={{ fontFamily: "'Architects Daughter', cursive", fontSize: 18, color: '#374151', marginBottom: 24 }}>{confirmDelete.text}</p>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <button onClick={() => setConfirmDelete(null)} style={{ flex: 1, padding: '12px 24px', backgroundColor: '#e5e7eb', color: '#374151', border: 'none', borderRadius: 6, fontFamily: "'Permanent Marker', cursive", fontSize: 16, cursor: 'pointer' }}>Cancel</button>
+                  <button onClick={() => { deleteItem(confirmDelete.id); setConfirmDelete(null); }} style={{ flex: 1, padding: '12px 24px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: 6, fontFamily: "'Permanent Marker', cursive", fontSize: 16, cursor: 'pointer' }}>Delete</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Expanded checkin modal */}
+          {expandedCheckin && (
+            <div onClick={() => setExpandedCheckin(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 40 }}>
+              <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: 'white', padding: 32, borderRadius: 8, boxShadow: '8px 8px 24px rgba(0,0,0,0.4)', maxWidth: 600, width: '100%', maxHeight: 'calc(100vh - 80px)', overflow: 'auto' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
+                  <NumberBadge number={expandedCheckin.id} size="normal" />
+                  <span style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 20, color: '#6b7280' }}>CHECKIN</span>
+                  <span style={{ fontFamily: "'Architects Daughter', cursive", fontSize: 14, color: '#9ca3af', marginLeft: 'auto' }}>{timeAgo(expandedCheckin.created_at)}</span>
+                </div>
+                {expandedCheckin.project_name && (
+                  <span style={{ display: 'inline-block', backgroundColor: '#FFD60A', padding: '4px 12px', borderRadius: 4, fontFamily: "'Architects Daughter', cursive", fontSize: 14, color: '#1a1a1a', border: '2px solid #1a1a1a', marginBottom: 16 }}>{expandedCheckin.project_name}</span>
+                )}
+                <div style={{ fontFamily: "'Architects Daughter', cursive", fontSize: 20, color: '#1a1a1a', lineHeight: 1.5, marginBottom: 16 }}>{expandedCheckin.summary}</div>
+                {expandedCheckin.details && (
+                  <div style={{ fontFamily: "'Architects Daughter', cursive", fontSize: 16, color: '#6b7280', lineHeight: 1.6, whiteSpace: 'pre-wrap', padding: 16, backgroundColor: '#f5f5f0', borderRadius: 6 }}>{expandedCheckin.details}</div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    ReactDOM.render(<Whiteboard />, document.getElementById('root'));
+  </script>
+</body>
+</html>`;
