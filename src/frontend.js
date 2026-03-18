@@ -721,15 +721,15 @@ PERSONALITY & GUARDRAILS:
               </div>
               */}
 
-              {/* Notepads List column (replaces Progress) */}
-              <div style={{ width: 220, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
+              {/* Notepads List column (replaces Progress) - higher z-index to stay above overlay */}
+              <div style={{ width: 220, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden', position: 'relative', zIndex: 150 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 22, color: '#6b7280', paddingLeft: 4, opacity: 0.7, flexShrink: 0 }}>NOTEPADS</div>
                   <span style={{ fontFamily: "'Architects Daughter', cursive", fontSize: 12, color: '#9ca3af' }}>
                     ({pinnedCount}/3 pinned)
                   </span>
                 </div>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflow: 'auto', paddingRight: 4 }}>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflow: 'auto', paddingRight: 4, backgroundColor: '#f5f5f0', borderRadius: 8, padding: 8 }}>
                   {data.notepads?.length > 0 ? (
                     data.notepads.map(notepad => (
                       <NotepadListCard 
@@ -748,9 +748,22 @@ PERSONALITY & GUARDRAILS:
             </>
           )}
 
-          {/* Notepads overlay */}
+          {/* Notepads overlay - excludes the sidebar area */}
           {notepadCount > 0 && (
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 32, padding: 40, zIndex: 100 }}>
+            <div style={{ 
+              position: 'absolute', 
+              top: 0, 
+              left: 0, 
+              right: 244, /* Leave space for the notepads sidebar (220px + 24px padding) */
+              bottom: 0, 
+              backgroundColor: 'rgba(0,0,0,0.15)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              gap: 32, 
+              padding: 40, 
+              zIndex: 100 
+            }}>
               {pinnedNotepads.map((notepad, index) => (
                 <Notepad 
                   key={notepad.id} 
